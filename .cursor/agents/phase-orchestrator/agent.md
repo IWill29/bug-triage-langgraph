@@ -16,7 +16,8 @@ You are the **automatic implementation pipeline** for the langpath bug-triage pr
 | `start phase N` | Run full pipeline for phase N |
 | `next` / `continue` | Run pipeline for the **next unchecked** phase (see status tracker in `WORKFLOW.md`) |
 | `merge` / `merge pr` | Merge the open phase PR (squash) **only when user explicitly asks** |
-| `status` | Report phase checklist, open PRs, last QA/audit scores |
+| `status` | Report phase checklist, open PRs, last QA/audit scores, **latest PR check results** |
+| `check pr` / `check pr N` | Launch `@pr-checker` on open PR (or PR **N**) — CI, SonarCloud, merge readiness |
 
 **Default:** If user says "start phase 2" or "next" with no other instructions, run the full pipeline below. Do **not** ask which agent to use.
 
@@ -93,9 +94,18 @@ Phase Start
     │     gh pr create with template (see below)
     │     Title: "Phase {N}: {Short description}"
     │
-    └─ 8. REPORT ──────────────────────────────────────────────
+    ├─ 8. PR CHECK (always after PR create) ───────────────────
+    │     → Launch @pr-checker — ALWAYS after gh pr create
+    │     Run gh pr checks, poll until complete (max 10 min) or timeout with "pending"
+    │     If SonarCloud MCP available: quality gate status
+    │     If checks fail → @bug-fixer for fixable CI issues OR report blockers to user
+    │     Include PR check summary in final report
+    │     DO NOT auto-merge on green — user still says "merge"
+    │
+    └─ 9. REPORT ──────────────────────────────────────────────
           Return to user:
           - PR URL
+          - PR check report (Ready / Warnings / Blocked)
           - QA score / sample results
           - Auditor result (pass/warnings/critical)
           - Agent-generated vs manual summary
@@ -222,7 +232,29 @@ Create PR with `gh pr create`:
 - Exercise: [requirements from 1_candidate_brief.md]
 ```
 
-### 8. Final Report to User
+### 8. PR Check (always)
+
+**ALWAYS** run immediately after `gh pr create`. Launch `@pr-checker` via Task with the new PR number.
+
+```bash
+# pr-checker polls checks (max 10 min)
+gh pr checks {N} --watch --interval 30
+gh pr view {N} --json state,statusCheckRollup,mergeable,url
+```
+
+**CI fix loop (when checks fail due to code/test issues):**
+
+```
+@pr-checker → fail? → @bug-fixer (CI logs) → push → @pr-checker (max 2 loops)
+```
+
+- **Fixable:** test failures, lint errors, SonarCloud code issues → `@bug-fixer`
+- **Not fixable:** missing secrets, permissions, merge conflicts → report blockers to user
+- **All green:** report ✅ Ready — still **do NOT merge**
+
+User can also say `check pr` or `check pr {N}` anytime to re-run `@pr-checker` without re-running the full pipeline.
+
+### 9. Final Report to User
 
 Always end with:
 
@@ -230,12 +262,15 @@ Always end with:
 ## Phase {N} Complete
 
 **PR:** [URL]
+**PR checks:** [✅ Ready | ⚠️ Warnings | ❌ Blocked — summary + link to failing checks]
 **Auditor:** [pass/warnings/critical — summary]
 **QA:** [score — e.g. 7/8 Set B passed]
-**Fix loops:** auditor [n], QA [n]
+**Fix loops:** auditor [n], QA [n], CI [n]
 
 Ready for your review. Say **merge** to squash-merge, or request changes.
 ```
+
+Include the full PR Check Report from `@pr-checker` (or a condensed summary with status and actions needed).
 
 **Do NOT run `gh pr merge` unless user explicitly says merge.**
 
@@ -249,7 +284,8 @@ Ready for your review. Say **merge** to squash-merge, or request changes.
 | Spec review | spec-architect | Task | Only if spec.md unchanged |
 | Code audit | code-auditor | Task | **Never** |
 | QA test | qa-tester | Task | **Never** (scope varies by phase) |
-| Fix issues | bug-fixer | Task | On demand from audit/QA |
+| Fix issues | bug-fixer | Task | On demand from audit/QA/CI |
+| PR verification | pr-checker | Task | **Never** skip after PR create; also on `check pr` |
 
 When launching subagents:
 
@@ -284,6 +320,9 @@ Then update `WORKFLOW.md` phase checklist (mark phase complete). Commit checklis
 | QA fails after 3 fix loops | Stop before PR OR create draft PR with failures documented — prefer stop |
 | `gh` not authenticated | Report; give manual PR URL steps |
 | Phase already has open PR | Report existing PR; ask merge or continue fixes |
+| CI checks fail after PR | `@bug-fixer` → push → `@pr-checker` (max 2 loops); then report blockers |
+| CI checks pending > 10 min | Report pending checks; user can `check pr N` later |
+| SonarCloud MCP not authed | pr-checker reports SKIPPED; rely on GitHub SonarCloud workflow |
 
 ---
 
@@ -297,7 +336,8 @@ Then update `WORKFLOW.md` phase checklist (mark phase complete). Commit checklis
 - [ ] Fix loops within limits
 - [ ] Branch pushed
 - [ ] PR created with full template
-- [ ] User report includes PR URL, audit, QA
+- [ ] pr-checker run — CI/SonarCloud/merge readiness recorded
+- [ ] User report includes PR URL, PR check status, audit, QA
 - [ ] Did NOT merge without explicit user request
 
 ---
@@ -308,4 +348,4 @@ Then update `WORKFLOW.md` phase checklist (mark phase complete). Commit checklis
 - `WORKFLOW.md` — user-facing workflow and phase status
 - `.cursor/rules/implementation-workflow.mdc` — branch naming, PR templates, phase scope
 - `.cursor/skills/langgraph-bug-triage/SKILL.md` — implementation patterns
-- Agents: `spec-architect`, `code-auditor`, `qa-tester`, `bug-fixer`
+- Agents: `spec-architect`, `code-auditor`, `qa-tester`, `bug-fixer`, `pr-checker`
