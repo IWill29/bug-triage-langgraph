@@ -76,14 +76,16 @@ Phase Start
     │     Do NOT proceed to QA with unresolved critical issues
     │
     ├─ 5. QA TEST (always before PR) ──────────────────────────
-    │     → Launch @qa-tester
+    │     → Launch @qa-tester — follow agent.md completely
     │     Phase 1: environment validation only (Docker, Gitea Set A, DB, LLM)
-    │     Phase 2+: full Set B samples + edge cases
-    │     Record: score, pass/fail per sample
+    │     Phase 2+: full Set B (B1,B3–B8) + edge cases — NOT unit tests alone
+    │     If Docker/keys missing: run integration tests OR mark QA BLOCKED
+    │     Record: score, pass/fail per sample, or BLOCKED with blockers
     │     IF failures:
     │       → Launch @bug-fixer with QA report
     │       → Re-launch @qa-tester
     │       → Max 3 fix→retest loops; then stop and report blockers
+    │     IF BLOCKED: do NOT claim QA passed in PR
     │
     ├─ 6. COMMIT + PUSH ───────────────────────────────────────
     │     Stage all phase changes (including fix commits)
@@ -158,19 +160,51 @@ Compare against spec.md. Report: pass | warnings | critical with file:line refs.
 @code-auditor → critical? → @bug-fixer → @code-auditor → (max 2 loops)
 ```
 
-### 5. QA Test (always)
+### 5. QA Test (always — mandatory for Phase 2+)
 
 Launch `@qa-tester` via Task with phase-appropriate scope:
 
 | Phase | QA scope |
 |-------|----------|
 | 1 | Environment validation only — Docker health, Gitea Set A, Postgres, LLM connectivity |
-| 2+ | Full Set B (B1–B8) + edge cases (empty, hostile, malformed) |
+| 2+ | **Full Set B (B1, B3–B8) + edge cases** — see `.cursor/agents/qa-tester/agent.md` |
+
+#### QA is NOT optional and NOT satisfied by unit tests alone
+
+**Unit tests (`pytest tests/unit`) do NOT count as Phase 2+ QA.** They validate isolated node logic only.
+
+For Phase 2 and later, `@qa-tester` MUST attempt at least one of:
+
+1. **Live Set B** — POST each sample to `http://localhost:8000/api/triage` against a running stack (Docker Compose preferred), **or**
+2. **Integration tests** — `pytest tests/integration -q -v` with mocked LLM when live keys/Docker unavailable
+
+If neither live Set B nor integration tests can run, QA status is **`BLOCKED`** — not "skipped", not "TODO", not "passed on unit tests only".
+
+#### QA gate before PR
+
+- Do **NOT** open a PR claiming "QA passed" unless Set B was **attempted** (live or integration).
+- PR template `QA Results` must reflect actual status: `passed`, `partial`, `failed`, or **`BLOCKED`**.
+- When `BLOCKED`, list blockers explicitly (missing `OPENAI_API_KEY`, `GITEA_TOKEN`, Docker down, postgres init failure, etc.).
+- Record which samples ran and pass/fail per sample — never aggregate to a score without running them.
+
+#### Environment prerequisites (qa-tester Phase 1)
+
+Before Set B, verify:
+
+```bash
+docker-compose ps          # postgres, gitea, triage-service Up
+curl http://localhost:8000/health
+curl http://localhost:3000/api/v1/repos/bugtracker/issues  # Set A (4 issues)
+python scripts/seed_gitea.py   # if Set A missing
+```
+
+If `.env` missing: copy from `.env.example` and note required keys (`OPENAI_API_KEY`, `GITEA_TOKEN`).
 
 **Fix loop (QA):**
 
 ```
 @qa-tester → failures? → @bug-fixer → @qa-tester → (max 3 loops)
+@qa-tester → BLOCKED?  → stop pipeline; report blockers; do NOT mark QA passed
 ```
 
 After 3 failed loops: stop pipeline, report blockers, do **not** create PR with known critical failures unless user overrides.
@@ -208,8 +242,9 @@ Create PR with `gh pr create`:
 - **Critical issues fixed:** [count or N/A]
 
 ## QA Results
-- **Mode:** [environment-only | full Set B]
-- **Score:** [X/Y samples passed]
+- **Mode:** [environment-only | full Set B live | integration (mocked LLM) | **BLOCKED**]
+- **Score:** [X/7 Set B samples passed — only if attempted]
+- **Blockers:** [missing keys, Docker down, postgres init failure, etc. — or none]
 - **Failures:** [list or none]
 - **Fix loops used:** [0-3]
 
@@ -282,6 +317,7 @@ Then update `WORKFLOW.md` phase checklist (mark phase complete). Commit checklis
 | Implementation blocked (missing env, API key) | Stop; list what user must provide |
 | Auditor critical after 2 fix loops | Stop before PR; report unresolved issues |
 | QA fails after 3 fix loops | Stop before PR OR create draft PR with failures documented — prefer stop |
+| QA **BLOCKED** (no keys/Docker/integration) | Stop before PR; status **BLOCKED** in report — never "QA passed" |
 | `gh` not authenticated | Report; give manual PR URL steps |
 | Phase already has open PR | Report existing PR; ask merge or continue fixes |
 
@@ -293,7 +329,7 @@ Then update `WORKFLOW.md` phase checklist (mark phase complete). Commit checklis
 - [ ] Implementation uses langgraph-bug-triage skill
 - [ ] spec-architect run OR skipped with reason
 - [ ] code-auditor run — result recorded
-- [ ] qa-tester run — result recorded
+- [ ] qa-tester run — result recorded (**BLOCKED** if Set B not attempted for Phase 2+)
 - [ ] Fix loops within limits
 - [ ] Branch pushed
 - [ ] PR created with full template
