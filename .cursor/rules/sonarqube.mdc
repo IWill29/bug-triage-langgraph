@@ -39,16 +39,18 @@ Requires the SonarQube plugin MCP server authenticated against **SonarCloud** (`
 
 Project key: `IWill29_bug-triage-langgraph` (from `sonar-project.properties`).
 
-### Via CI (primary full-project scan)
+### Via SonarCloud GitHub App (primary full-project scan on PRs)
 
-GitHub Actions runs on push to `main` and on PRs — see [`.github/workflows/sonarqube.yml`](../../.github/workflows/sonarqube.yml). Requires `SONAR_TOKEN` GitHub secret. Results appear on the [SonarCloud dashboard](https://sonarcloud.io/project/overview?id=IWill29_bug-triage-langgraph).
+Full-repo analysis and **Quality Gate** on pull requests run through the [SonarCloud GitHub App](https://github.com/apps/sonarcloud), not a local GitHub Actions workflow. There is **no** `.github/workflows/sonarqube.yml`. The PR check *SonarCloud Code Analysis* is the source of truth for merge gating.
+
+The **pr-checker** agent uses SonarCloud MCP (`get_project_quality_gate_status`, issue listing) when MCP is authenticated — complementing the App check before merge.
 
 Do **not** configure or scan against a local SonarQube server (`localhost:9000`).
 
 ## Setup (one-time)
 
-1. Create project at [sonarcloud.io](https://sonarcloud.io) linked to the GitHub repo `IWill29/bug-triage-langgraph`
-2. Add GitHub secret: `SONAR_TOKEN` (SonarCloud token from Account → Security)
-3. Ensure `sonar.organization` in `sonar-project.properties` matches your SonarCloud org (default: `IWill29`)
+1. Install the SonarCloud GitHub App and create/link the project at [sonarcloud.io](https://sonarcloud.io) for GitHub repo `IWill29/bug-triage-langgraph`
+2. Ensure `sonar.organization` in `sonar-project.properties` matches your SonarCloud org (default: `IWill29`)
+3. Optional: `SONAR_TOKEN` only for local `sonar scan` or CLI — not required for PR analysis via the App
 4. Authenticate MCP/CLI for SonarCloud: `sonar auth login -o IWill29`
 5. Restart Cursor so SonarQube MCP tools load (they target SonarCloud after auth)
