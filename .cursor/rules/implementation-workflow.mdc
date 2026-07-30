@@ -299,9 +299,7 @@ gh pr create --title "Phase 2: Core workflow nodes" --body "[see template]"
 
 # Merge when approved
 gh pr merge --squash
-```
-
----
+`
 
 ---
 
@@ -310,8 +308,8 @@ gh pr merge --squash
 | Phase | Branch | Base | Status |
 |-------|--------|------|--------|
 | 0 – Architecture & agents | `phase-0-architecture` | — | Committed (`b04ba96`); content already on `main` (retroactive branch) |
-| 1.5 – Spec fixes | `phase-1-spec-fixes` | `phase-0-architecture` | Committed (`e0cd1b1`); content already on `main` (retroactive branch) |
-| 1 – Infrastructure | `phase-1-infrastructure` | `main` @ spec fixes | Open PR ? merge to `main` before Phase 2 |
+| 1.5 – Spec fixes | `phase-1-spec-fixes` | `phase-0-architecture` | PR [#1](https://github.com/IWill29/bug-triage-langgraph/pull/1) (stacked review; already on `main`) |
+| 1 – Infrastructure | `phase-1-infrastructure` | `main` @ spec fixes | PR [#2](https://github.com/IWill29/bug-triage-langgraph/pull/2) — merge before Phase 2 |
 | 2 – Workflow nodes | `phase-2-workflow-nodes` | `main` after Phase 1 merge | **Next** |
 | 3 – Production hardening | `phase-3-production-hardening` | `main` | Planned |
 | 4 – Testing | `phase-4-testing` | `main` | Planned |
