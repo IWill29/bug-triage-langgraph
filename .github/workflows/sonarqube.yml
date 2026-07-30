@@ -11,40 +11,41 @@ jobs:
   sonarcloud:
     name: SonarCloud Analysis
     runs-on: ubuntu-latest
-    if: ${{ secrets.SONAR_TOKEN != '' }}
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     steps:
+      - name: SONAR_TOKEN not configured
+        if: env.SONAR_TOKEN == ''
+        run: |
+          echo "::notice title=SonarCloud skipped::SONAR_TOKEN is not set. Import this repo at https://sonarcloud.io, generate a token, and add it as the SONAR_TOKEN repository secret. See README (Code Quality / SonarCloud)."
+          echo "Skipping SonarCloud scan until SONAR_TOKEN is configured."
+
       - name: Checkout
+        if: env.SONAR_TOKEN != ''
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Python
+        if: env.SONAR_TOKEN != ''
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install dependencies
+        if: env.SONAR_TOKEN != ''
         run: pip install -r requirements.txt
 
       - name: Run tests with coverage
+        if: env.SONAR_TOKEN != ''
         run: pytest --cov=src --cov-report=xml
         continue-on-error: true
 
       - name: SonarCloud Scan
+        if: env.SONAR_TOKEN != ''
         uses: SonarSource/sonarqube-scan-action@v6
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
 
-  sonarcloud-setup-required:
-    name: SonarCloud Analysis
-    runs-on: ubuntu-latest
-    if: ${{ secrets.SONAR_TOKEN == '' }}
-
-    steps:
-      - name: SONAR_TOKEN not configured
-        run: |
-          echo "::notice title=SonarCloud skipped::SONAR_TOKEN is not set. Import this repo at https://sonarcloud.io, generate a token, and add it as the SONAR_TOKEN repository secret. See README (Code Quality / SonarCloud)."
-          echo "Skipping SonarCloud scan until SONAR_TOKEN is configured."
