@@ -35,6 +35,8 @@ Transforms free-text bug reports into structured, triaged issues in a self-hoste
 
 See [`spec.md`](spec.md) for full technical specification.
 
+**Development workflow:** Say `next` or `start phase N` — the [phase-orchestrator](.cursor/agents/phase-orchestrator/agent.md) runs branch → implement → audit → QA → PR automatically. See [`WORKFLOW.md`](WORKFLOW.md).
+
 ## Quick Start
 
 ### Prerequisites

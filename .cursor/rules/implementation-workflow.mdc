@@ -6,53 +6,93 @@ alwaysApply: false
 
 # Implementation Workflow Manager
 
+## Default Entry Point: Phase Orchestrator
+
+**Do not ask the user which agent to run.** Use the automatic pipeline.
+
+| User says | Action |
+|-----------|--------|
+| `start phase N` | Run [phase-orchestrator](../agents/phase-orchestrator/agent.md) for phase N |
+| `next` / `continue` | Run orchestrator for next unchecked phase (see checklist below) |
+| `merge` / `merge pr` | Merge open phase PR only when user explicitly requests |
+| `status` | Report phase checklist and open PRs |
+
+Full user guide: [`WORKFLOW.md`](../../WORKFLOW.md) at repo root.
+
+## Mandatory Agent Chain (per phase)
+
+The orchestrator runs this sequence **automatically** ? not optional:
+
+```
+1. Branch from main          phase-{N}-{description}
+2. Implement                 generalPurpose + langgraph-bug-triage skill
+3. @spec-architect           IF spec.md changed; else skip
+4. @code-auditor             ALWAYS ? audit vs spec.md
+   ?? critical ? @bug-fixer ? re-audit (max 2 loops)
+5. @qa-tester                ALWAYS before PR
+   Phase 1: environment only | Phase 2+: full Set B + edge cases
+   ?? fail ? @bug-fixer ? re-test (max 3 loops)
+6. Commit + push branch
+7. gh pr create              template with audit + QA results
+8. Report PR URL             DO NOT merge unless user says "merge"
+```
+
+**Never** skip code-auditor or qa-tester. **Never** merge without explicit user approval.
+
+---
+
+## Phase Status Checklist
+
+- [x] **Phase 0:** Architecture (main)
+- [x] **Phase 1:** Infrastructure (merged PR #2)
+- [ ] **Phase 2:** Workflow nodes ? **NEXT** (orchestrator handles on `next`)
+- [ ] **Phase 3:** Production hardening
+- [ ] **Phase 4:** Testing
+
+---
+
 ## Purpose
 
 Coordinates multi-phase implementation with proper Git workflow:
+
 - Auto-creates feature branches for each phase
+- Runs mandatory audit + QA agent chain
 - Commits work to branch
-- Creates PR with description
-- Documents what was generated vs manually changed
+- Creates PR with agent vs manual documentation
+- Fix loops via bug-fixer when audit or QA fails
 
 ## When to Use
 
-Apply this workflow when starting a new implementation phase (Phase 2, 3, 4, etc.)
+Apply when starting any implementation phase (2, 3, 4). Invoke **phase-orchestrator** ? not individual agents in isolation.
 
-## Workflow Steps
+---
+
+## Workflow Steps (orchestrator executes)
 
 ### 1. Branch Creation
 
-Before starting work:
-
 ```bash
-# Create feature branch
+git checkout main
+git pull origin main
 git checkout -b phase-{N}-{short-description}
-
-# Examples:
-# git checkout -b phase-2-workflow-nodes
-# git checkout -b phase-3-duplicate-detection
-# git checkout -b phase-4-testing
 ```
 
-**Branch naming convention:**
-- `phase-{N}-{description}` - Implementation phases
-- `fix-{issue}` - Bug fixes
-- `docs-{topic}` - Documentation updates
+**Branch naming:**
+
+- `phase-{N}-{description}` ? implementation phases
+- `fix-{issue}` ? bug fixes
+- `docs-{topic}` ? documentation updates
+- `chore/{topic}` ? tooling/workflow (e.g. `chore/auto-orchestration-workflow`)
 
 ### 2. Implementation
 
-Work on the phase, committing incrementally:
+Orchestrator delegates to generalPurpose with:
 
-```bash
-# Commit logical units of work
-git add src/graph/nodes/
-git commit -m "Implement preprocess and risk check nodes"
+- `spec.md` phase scope
+- `.cursor/skills/langgraph-bug-triage/SKILL.md`
 
-git add src/services/llm_service.py
-git commit -m "Add LLM service with structured output validation"
-```
+Commit incrementally:
 
-**Commit message format:**
 ```
 [verb] [what] [(optional context)]
 
@@ -60,20 +100,34 @@ Examples:
 - Add preprocess node with text cleaning
 - Implement two-stage duplicate detection
 - Fix ValidationError handling in triage node
-- Update state schema with secondary_issues field
 ```
 
-### 3. Push Branch
+### 3. Spec Review (conditional)
+
+If `git diff main -- spec.md` is non-empty ? `@spec-architect`. Otherwise skip.
+
+### 4. Code Audit (mandatory)
+
+`@code-auditor` audits against `spec.md`. Critical issues ? `@bug-fixer` ? re-audit (max 2 loops).
+
+### 5. QA Test (mandatory)
+
+| Phase | QA scope |
+|-------|----------|
+| 1 | Environment validation only |
+| 2+ | Full Set B + edge cases |
+
+Failures ? `@bug-fixer` ? re-test (max 3 loops).
+
+### 6. Push Branch
 
 ```bash
-# Push feature branch
 git push -u origin phase-{N}-{description}
 ```
 
-### 4. Create PR
+### 7. Create PR
 
 ```bash
-# Using gh CLI
 gh pr create \
   --title "Phase {N}: {Title}" \
   --body "$(cat <<'EOF'
@@ -83,7 +137,6 @@ gh pr create \
 ## Changes
 - [Change 1]
 - [Change 2]
-- [Change 3]
 
 ## Agent-Generated vs Manual
 **Agent generated:**
@@ -91,52 +144,33 @@ gh pr create \
 
 **Manually changed:**
 - [Files you modified after agent]
-- Why: [Reason for changes]
 
-**Didn't trust:**
-- [Code you reviewed and fixed]
-- Why: [What was wrong]
+## Audit Result
+- **Code auditor:** [pass | warnings | critical]
+
+## QA Results
+- **Mode:** [environment-only | full Set B]
+- **Score:** [X/Y passed]
 
 ## Testing
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual testing on Set B samples
+- [ ] Phase-appropriate checks
 
 ## Addresses
-- Spec requirement: [which requirement from spec.md]
+- Spec requirement: [from spec.md]
 - Exercise requirement: [from 1_candidate_brief.md]
-
 EOF
 )"
 ```
 
-**PR Title Format:**
-```
-Phase {N}: {Short description}
+### 8. Review & Merge (user-initiated)
 
-Examples:
-- Phase 2: Core workflow nodes implementation
-- Phase 3: Duplicate detection with embeddings
-- Phase 4: Testing and validation
-```
-
-### 5. Review & Merge
-
-After PR created:
+Orchestrator reports PR URL. User says `merge` when ready:
 
 ```bash
-# Run code auditor
-@code-auditor audit phase-{N} implementation
-
-# Run QA tests
-@qa-tester test phase-{N}
-
-# If failures, run bug-fixer
-@bug-fixer fix [issue]
-
-# When approved, merge
-gh pr merge --squash
+gh pr merge {number} --squash
 ```
+
+---
 
 ## Phase-Specific Guidelines
 
@@ -145,48 +179,17 @@ gh pr merge --squash
 **Branch:** `phase-2-workflow-nodes`
 
 **Scope:**
+
 - Implement all 10 nodes (preprocess through comment_duplicate)
 - Build complete LangGraph workflow
 - Add error handlers and timeout policies
-
-**PR Description Template:**
-```markdown
-## Summary
-Implements core LangGraph workflow with 10 nodes following spec.md architecture.
-
-## Changes
-- State schema (BugTriageState) with immutability
-- 10 workflow nodes:
-  - preprocess_node: Text cleaning, stacktrace extraction
-  - risk_check_node: Security/data loss detection
-  - fast_triage_node: GPT-4o-mini extraction
-  - premium_retry_node: GPT-4o retry with error feedback
-  - validate_node: Pydantic + business rules
-  - duplicate_check_node: Two-stage detection
-  - route_issue_creation: Feature vs bug routing
-  - create_issue_node: Gitea bug creation
-  - create_feature_node: Gitea enhancement creation
-  - comment_duplicate_node: Comment on existing
-- Conditional routing with Literal type hints
-- PostgresSaver checkpointing
-- Error handlers on all critical nodes
-
-## Testing
-- [x] Workflow compiles without errors
-- [ ] Manual test on B1 (clean report)
-- [ ] Manual test on B3 (vague report)
-- [ ] Manual test on B5 (duplicate)
-
-## Addresses
-- Spec: All node specifications (¬ß Node Specifications)
-- Exercise: Functional requirements 1-6
-```
 
 ### Phase 3: Production Hardening
 
 **Branch:** `phase-3-production-hardening`
 
 **Scope:**
+
 - Observability (LangSmith, structured logging)
 - Duplicate detection validation script
 - Empty/hostile input handling
@@ -197,109 +200,46 @@ Implements core LangGraph workflow with 10 nodes following spec.md architecture.
 **Branch:** `phase-4-testing`
 
 **Scope:**
+
 - Unit tests for all nodes
 - Integration tests for graph flow
 - Set B validation (all 8 samples)
 - Multi-turn tests
 
+---
+
 ## Exercise Requirement Compliance
 
 The brief states:
-> "Commit your work to the Gitea repo and open at least one PR ‚Äî we want to see the flow end to end"
+
+> "Commit your work to the Gitea repo and open at least one PR ? we want to see the flow end to end"
 
 **Our approach:**
+
 1. Each phase = 1 PR
-2. PR description documents agent vs manual work
-3. Clear commit history shows development process
-4. Review step built in (code-auditor, qa-tester)
+2. Orchestrator runs audit + QA before every PR
+3. PR description documents agent vs manual work
+4. User merges when satisfied
+
+---
 
 ## Git Best Practices
 
 ### DO:
-- ‚úÖ Create feature branch for each phase
-- ‚úÖ Commit logical units of work
-- ‚úÖ Write clear commit messages
-- ‚úÖ Document agent-generated vs manual in PR
-- ‚úÖ Test before creating PR
+
+- Use phase-orchestrator for every phase
+- Create feature branch for each phase
+- Commit logical units of work
+- Document agent-generated vs manual in PR
+- Run audit + QA before PR (orchestrator enforces)
 
 ### DON'T:
-- ‚ùå Work directly on main
-- ‚ùå Create giant commits with "misc changes"
-- ‚ùå Skip PR description
-- ‚ùå Merge without code review (auditor)
-- ‚ùå Push broken code
 
-## Auto-Branch Creation Template
-
-When starting a new phase, use this pattern:
-
-```bash
-# 1. Ensure main is up to date
-git checkout main
-git pull origin main
-
-# 2. Create feature branch
-PHASE_NUM=2
-PHASE_DESC="workflow-nodes"
-git checkout -b "phase-${PHASE_NUM}-${PHASE_DESC}"
-
-# 3. Start work
-[implementation happens]
-
-# 4. Commit incrementally
-git add [files]
-git commit -m "[message]"
-
-# 5. Push and create PR
-git push -u origin "phase-${PHASE_NUM}-${PHASE_DESC}"
-gh pr create --title "Phase ${PHASE_NUM}: [Title]" --body "[Body]"
-```
-
-## Integration with Agents
-
-### Before calling implementation agent:
-
-```bash
-# Create branch first
-git checkout -b phase-2-workflow-nodes
-```
-
-### When agent completes:
-
-```bash
-# Review changes
-git status
-git diff
-
-# Stage and commit
-git add .
-git commit -m "Phase 2: Implement core workflow nodes
-
-- Add all 10 nodes with error handling
-- Configure PostgresSaver checkpointing
-- Add conditional routing with type hints
-- Implement two-stage duplicate detection"
-
-# Push and PR
-git push -u origin phase-2-workflow-nodes
-gh pr create --title "Phase 2: Core workflow nodes" --body "[see template]"
-```
-
-### After PR created:
-
-```bash
-# Audit code
-@code-auditor audit implementation
-
-# Test behavior  
-@qa-tester run Set B tests
-
-# If issues found
-@bug-fixer fix [issue]
-
-# Merge when approved
-gh pr merge --squash
-`
+- Work directly on main for implementation
+- Ask user which agent to invoke mid-pipeline
+- Skip code-auditor or qa-tester
+- Merge without user saying "merge"
+- Force-push main
 
 ---
 
@@ -307,25 +247,15 @@ gh pr merge --squash
 
 | Phase | Branch | Base | Status |
 |-------|--------|------|--------|
-| 0 ñ Architecture & agents | `phase-0-architecture` | ó | Committed (`b04ba96`); content already on `main` (retroactive branch) |
-| 1.5 ñ Spec fixes | `phase-1-spec-fixes` | `phase-0-architecture` | PR [#1](https://github.com/IWill29/bug-triage-langgraph/pull/1) (stacked review; already on `main`) |
-| 1 ñ Infrastructure | `phase-1-infrastructure` | `main` @ spec fixes | PR [#2](https://github.com/IWill29/bug-triage-langgraph/pull/2) ó merge before Phase 2 |
-| 2 ñ Workflow nodes | `phase-2-workflow-nodes` | `main` after Phase 1 merge | **Next** |
-| 3 ñ Production hardening | `phase-3-production-hardening` | `main` | Planned |
-| 4 ñ Testing | `phase-4-testing` | `main` | Planned |
+| 0 ? Architecture & agents | `phase-0-architecture` | ? | On `main` |
+| 1.5 ? Spec fixes | `phase-1-spec-fixes` | ? | PR [#1](https://github.com/IWill29/bug-triage-langgraph/pull/1) (on `main`) |
+| 1 ? Infrastructure | `phase-1-infrastructure` | `main` | Merged PR [#2](https://github.com/IWill29/bug-triage-langgraph/pull/2) |
+| 2 ? Workflow nodes | `phase-2-workflow-nodes` | `main` | **Next** ? say `next` |
+| 3 ? Production hardening | `phase-3-production-hardening` | `main` | Planned |
+| 4 ? Testing | `phase-4-testing` | `main` | Planned |
 
-**Git flow:** Do not commit implementation work directly on `main`. Each phase = feature branch + PR with Summary, Agent vs manual, and Test plan.
-
-**Note:** Phase 0 and 1.5 were committed to `main` before branch workflow; branches exist for traceability. New work merges via PR only.
+**Git flow:** Implementation work merges via PR only. Orchestrator creates branch, runs agents, opens PR.
 
 ## Next Action
 
-After `phase-1-infrastructure` PR is merged:
-
-```bash
-git checkout main
-git pull origin main
-git checkout -b phase-2-workflow-nodes
-```
-
-Then invoke implementation agent for Phase 2.
+Say **`next`** or **`start phase 2`**. Phase-orchestrator handles the rest.
