@@ -166,18 +166,18 @@ langpath/
     └── test_triage.py           # CLI test harness
 ```
 
-### Code Quality (SonarQube)
+### Code Quality (SonarCloud)
 
-Static analysis via SonarQube. Project key: `bug-triage-langgraph` ([`sonar-project.properties`](sonar-project.properties)).
+Static analysis via [SonarCloud](https://sonarcloud.io/project/overview?id=IWill29_bug-triage-langgraph) (no local SonarQube server). Project key: `IWill29_bug-triage-langgraph` ([`sonar-project.properties`](sonar-project.properties)).
 
-```bash
-# Local scan (requires sonarqube-cli + sonar auth login)
-sonar scan
+**One-time setup:**
 
-# Or in Cursor: use SonarQube MCP skills before opening a PR
-```
+1. Create a project at [sonarcloud.io](https://sonarcloud.io) linked to this GitHub repo (`IWill29/bug-triage-langgraph`).
+2. Add GitHub repo secret `SONAR_TOKEN` (SonarCloud → My Account → Security → Generate Token).
+3. Confirm `sonar.organization` in `sonar-project.properties` matches your SonarCloud org (default: `IWill29`), or set env `SONAR_ORGANIZATION` in CI.
+4. For Cursor MCP: `sonar auth login -o IWill29` (SonarCloud), then restart Cursor.
 
-CI runs on push to `main` and on PRs (`.github/workflows/sonarqube.yml`). Set GitHub secrets `SONAR_TOKEN` and `SONAR_HOST_URL` (`https://sonarcloud.io` for SonarCloud).
+CI runs on push to `main` and on PRs ([`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml)). View results on the [SonarCloud dashboard](https://sonarcloud.io/project/overview?id=IWill29_bug-triage-langgraph).
 
 ### Running Tests
 

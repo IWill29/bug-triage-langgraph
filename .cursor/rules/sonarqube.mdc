@@ -1,20 +1,24 @@
 ---
 name: sonarqube
-description: Run SonarQube analysis at meaningful checkpoints — not on every edit
+description: Run SonarCloud analysis at meaningful checkpoints — not on every edit
 alwaysApply: false
 ---
 
-# SonarQube Code Quality
+# SonarCloud Code Quality
 
-Project config: [`sonar-project.properties`](../../sonar-project.properties) (`bug-triage-langgraph`).
+This project uses **SonarCloud only** — no local or self-hosted SonarQube server.
+
+Project config: [`sonar-project.properties`](../../sonar-project.properties) (`IWill29_bug-triage-langgraph`).
+
+Dashboard: https://sonarcloud.io/project/overview?id=IWill29_bug-triage-langgraph
 
 ## When to run
 
-Run SonarQube analysis **only** at these checkpoints:
+Run SonarCloud analysis **only** at these checkpoints:
 
 - Before opening a PR (after significant code changes on a feature branch)
 - When the user explicitly asks for a quality check, quality gate, or issue scan
-- After fixing SonarQube-reported issues (to verify the fix)
+- After fixing SonarCloud-reported issues (to verify the fix)
 
 Do **not** run analysis after every file edit, save, or small typo fix.
 
@@ -22,37 +26,29 @@ Do **not** run analysis after every file edit, save, or small typo fix.
 
 ### Via MCP (preferred in Cursor)
 
-Requires the SonarQube plugin MCP server and `sonar auth login`. If tools are unavailable, tell the user to run the **sonar-integrate** skill and restart the session.
+Requires the SonarQube plugin MCP server authenticated against **SonarCloud** (`sonar auth login -o IWill29`). If tools are unavailable, tell the user to run the **sonar-integrate** skill and restart the session.
 
 | Task | Skill / MCP tool |
 |------|------------------|
 | Analyze a file | `sonar-analyze` → `run_advanced_code_analysis` or `analyze_code_snippet` |
 | Quality gate before PR | `sonar-quality-gate` → `get_project_quality_gate_status` |
-| List open issues | `sonar-list-issues` (CLI: `sonar list issues -p bug-triage-langgraph`) |
+| List open issues | `sonar-list-issues` (CLI: `sonar list issues -p IWill29_bug-triage-langgraph`) |
 | Fix a specific rule | `sonar-fix-issue` |
 | Coverage gaps | `sonar-coverage` |
 | Duplication | `sonar-duplication` |
 
-Project key: `bug-triage-langgraph` (from `sonar-project.properties`).
+Project key: `IWill29_bug-triage-langgraph` (from `sonar-project.properties`).
 
-### Via CLI (local full scan)
+### Via CI (primary full-project scan)
 
-```bash
-# One-time: install CLI + authenticate (see README)
-sonar auth login -o <your-org-key>
+GitHub Actions runs on push to `main` and on PRs — see [`.github/workflows/sonarqube.yml`](../../.github/workflows/sonarqube.yml). Requires `SONAR_TOKEN` GitHub secret. Results appear on the [SonarCloud dashboard](https://sonarcloud.io/project/overview?id=IWill29_bug-triage-langgraph).
 
-# Full project scan from repo root
-sonar scan
-```
-
-### Via CI
-
-GitHub Actions runs on push to `main` and on PRs — see [`.github/workflows/sonarqube.yml`](../../.github/workflows/sonarqube.yml). Requires `SONAR_TOKEN` and `SONAR_HOST_URL` repo secrets.
+Do **not** configure or scan against a local SonarQube server (`localhost:9000`).
 
 ## Setup (one-time)
 
-1. Install [sonarqube-cli](https://cli.sonarqube.com/) (`irm ... | iex` on Windows)
-2. Authenticate: `sonar auth login -o <org-key>` (EU) or `-s https://sonarqube.us` (US)
-3. Create project `bug-triage-langgraph` in SonarCloud (or link via GitHub integration)
-4. Add GitHub secrets: `SONAR_TOKEN`, `SONAR_HOST_URL` (`https://sonarcloud.io` for SonarCloud)
-5. Restart Cursor so SonarQube MCP tools load
+1. Create project at [sonarcloud.io](https://sonarcloud.io) linked to the GitHub repo `IWill29/bug-triage-langgraph`
+2. Add GitHub secret: `SONAR_TOKEN` (SonarCloud token from Account → Security)
+3. Ensure `sonar.organization` in `sonar-project.properties` matches your SonarCloud org (default: `IWill29`)
+4. Authenticate MCP/CLI for SonarCloud: `sonar auth login -o IWill29`
+5. Restart Cursor so SonarQube MCP tools load (they target SonarCloud after auth)
