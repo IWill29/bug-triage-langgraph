@@ -1,0 +1,58 @@
+---
+name: sonarqube
+description: Run SonarQube analysis at meaningful checkpoints — not on every edit
+alwaysApply: false
+---
+
+# SonarQube Code Quality
+
+Project config: [`sonar-project.properties`](../../sonar-project.properties) (`bug-triage-langgraph`).
+
+## When to run
+
+Run SonarQube analysis **only** at these checkpoints:
+
+- Before opening a PR (after significant code changes on a feature branch)
+- When the user explicitly asks for a quality check, quality gate, or issue scan
+- After fixing SonarQube-reported issues (to verify the fix)
+
+Do **not** run analysis after every file edit, save, or small typo fix.
+
+## How to invoke
+
+### Via MCP (preferred in Cursor)
+
+Requires the SonarQube plugin MCP server and `sonar auth login`. If tools are unavailable, tell the user to run the **sonar-integrate** skill and restart the session.
+
+| Task | Skill / MCP tool |
+|------|------------------|
+| Analyze a file | `sonar-analyze` → `run_advanced_code_analysis` or `analyze_code_snippet` |
+| Quality gate before PR | `sonar-quality-gate` → `get_project_quality_gate_status` |
+| List open issues | `sonar-list-issues` (CLI: `sonar list issues -p bug-triage-langgraph`) |
+| Fix a specific rule | `sonar-fix-issue` |
+| Coverage gaps | `sonar-coverage` |
+| Duplication | `sonar-duplication` |
+
+Project key: `bug-triage-langgraph` (from `sonar-project.properties`).
+
+### Via CLI (local full scan)
+
+```bash
+# One-time: install CLI + authenticate (see README)
+sonar auth login -o <your-org-key>
+
+# Full project scan from repo root
+sonar scan
+```
+
+### Via CI
+
+GitHub Actions runs on push to `main` and on PRs — see [`.github/workflows/sonarqube.yml`](../../.github/workflows/sonarqube.yml). Requires `SONAR_TOKEN` and `SONAR_HOST_URL` repo secrets.
+
+## Setup (one-time)
+
+1. Install [sonarqube-cli](https://cli.sonarqube.com/) (`irm ... | iex` on Windows)
+2. Authenticate: `sonar auth login -o <org-key>` (EU) or `-s https://sonarqube.us` (US)
+3. Create project `bug-triage-langgraph` in SonarCloud (or link via GitHub integration)
+4. Add GitHub secrets: `SONAR_TOKEN`, `SONAR_HOST_URL` (`https://sonarcloud.io` for SonarCloud)
+5. Restart Cursor so SonarQube MCP tools load

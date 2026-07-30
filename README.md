@@ -166,6 +166,19 @@ langpath/
     └── test_triage.py           # CLI test harness
 ```
 
+### Code Quality (SonarQube)
+
+Static analysis via SonarQube. Project key: `bug-triage-langgraph` ([`sonar-project.properties`](sonar-project.properties)).
+
+```bash
+# Local scan (requires sonarqube-cli + sonar auth login)
+sonar scan
+
+# Or in Cursor: use SonarQube MCP skills before opening a PR
+```
+
+CI runs on push to `main` and on PRs (`.github/workflows/sonarqube.yml`). Set GitHub secrets `SONAR_TOKEN` and `SONAR_HOST_URL` (`https://sonarcloud.io` for SonarCloud).
+
 ### Running Tests
 
 ```bash
