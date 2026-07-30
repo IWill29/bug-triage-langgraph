@@ -168,6 +168,19 @@ langpath/
     └── test_triage.py           # CLI test harness
 ```
 
+### Code Quality (SonarCloud)
+
+Static analysis via [SonarCloud](https://sonarcloud.io/project/overview?id=IWill29_bug-triage-langgraph) (no local SonarQube server). Project key: `IWill29_bug-triage-langgraph` ([`sonar-project.properties`](sonar-project.properties)).
+
+**One-time setup:**
+
+1. Install the [SonarCloud GitHub App](https://github.com/apps/sonarcloud) and link this repo (`IWill29/bug-triage-langgraph`) at [sonarcloud.io](https://sonarcloud.io).
+2. Confirm `sonar.organization` and project key in [`sonar-project.properties`](sonar-project.properties) match your SonarCloud org (default: `IWill29`).
+3. **Pull requests:** the SonarCloud App runs full analysis and posts **Quality Gate** status automatically (GitHub check: *SonarCloud Code Analysis*). No GitHub Actions workflow is used for Sonar.
+4. **Optional (local CLI / Cursor MCP):** generate `SONAR_TOKEN` at SonarCloud → My Account → Security if you run `sonar scan` locally; for MCP run `sonar auth login -o IWill29`, then restart Cursor.
+
+View results on the [SonarCloud dashboard](https://sonarcloud.io/project/overview?id=IWill29_bug-triage-langgraph).
+
 ### Running Tests
 
 ```bash
