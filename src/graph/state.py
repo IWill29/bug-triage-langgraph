@@ -38,6 +38,7 @@ class BugTriageState(TypedDict):
     
     # ========== VALIDATION ==========
     validation_errors: Annotated[list[dict], operator.add]  # Accumulates
+    validation_passed: bool                 # Latest validate attempt result
     retry_count: int                        # Current retry attempt
     used_premium_model: bool                # Escalation flag
     
@@ -55,3 +56,37 @@ class BugTriageState(TypedDict):
     # ========== AUDIT TRAIL ==========
     classification_history: Annotated[list[dict], operator.add]
     node_timings: Annotated[list[dict], operator.add]
+
+
+def create_initial_state(bug_report_text: str, thread_id: str) -> dict:
+    """Build initial state with required defaults for graph invocation."""
+    return {
+        "bug_report_text": bug_report_text,
+        "thread_id": thread_id,
+        "cleaned_report": None,
+        "extracted_stacktrace": None,
+        "stacktrace_hash": None,
+        "risk_level": None,
+        "risk_signals": [],
+        "title": None,
+        "severity": None,
+        "components": [],
+        "reproduction_steps": None,
+        "confidence": 0.0,
+        "is_feature_request": False,
+        "multiple_issues_detected": False,
+        "secondary_issues": [],
+        "validation_errors": [],
+        "validation_passed": False,
+        "retry_count": 0,
+        "used_premium_model": False,
+        "duplicate_candidates": [],
+        "is_duplicate": False,
+        "duplicate_issue_id": None,
+        "duplicate_confidence": 0.0,
+        "gitea_issue_url": None,
+        "needs_human_review": False,
+        "processing_warnings": [],
+        "classification_history": [],
+        "node_timings": [],
+    }

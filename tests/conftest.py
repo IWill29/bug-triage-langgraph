@@ -2,9 +2,16 @@
 Pytest configuration and fixtures
 """
 
+import os
+
 import pytest
-from typing import Generator
 from langgraph.checkpoint.memory import MemorySaver
+
+# Minimal env for settings import during tests
+os.environ.setdefault("DATABASE_URL", "postgresql://test:test@localhost:5432/test")
+os.environ.setdefault("GITEA_URL", "http://localhost:3000")
+os.environ.setdefault("GITEA_TOKEN", "test-token")
+os.environ.setdefault("OPENAI_API_KEY", "sk-test-key")
 
 from src.graph.workflow import build_graph
 
