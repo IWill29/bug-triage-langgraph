@@ -60,9 +60,12 @@ After every PR is opened, the orchestrator **always** runs `@pr-checker`. You do
 
 The checker verifies:
 
-- **GitHub checks** — CI workflows (including SonarCloud via `.github/workflows/sonarqube.yml` when present)
-- **SonarCloud quality gate** — via MCP when authenticated; otherwise **SKIPPED** with link to dashboard
+- **GitHub checks** — all PR status checks via `gh pr checks` and `statusCheckRollup`
+- **SonarCloud GitHub App** — check name **`SonarCloud Code Analysis`** (App-only; no `sonarqube.yml` workflow)
+- **SonarCloud MCP** — `get_project_quality_gate_status` when authenticated (secondary confirmation)
 - **Merge readiness** — conflicts, pending required checks, overall ✅ / ⚠️ / ❌ status
+
+**SonarCloud on docs-only PRs:** PRs that only change `.cursor/`, `*.md`, or other non-code paths typically do **not** trigger the SonarCloud App. pr-checker reports this as **SKIPPED (no analyzable code in diff)** — not a failure. Code PRs (`src/`, `tests/`, `*.py`) should show the App check; if missing, pr-checker reports **MISSING** and warns to verify App installation.
 
 **Never auto-merges** — even when all checks pass. You still say **`merge`** when ready.
 
@@ -83,10 +86,13 @@ The checker verifies:
 | Responsibility | Details |
 |----------------|---------|
 | Poll GitHub checks | `gh pr checks N --watch --interval 30` — max 10 min, then report pending |
-| SonarCloud gate | `get_project_quality_gate_status` via MCP when authed; else SKIPPED |
+| SonarCloud App check | Look for **`SonarCloud Code Analysis`** in `statusCheckRollup` — primary source of truth |
+| SonarCloud MCP gate | `get_project_quality_gate_status` via MCP when authed; else MCP SKIPPED |
+| Docs-only PRs | SonarCloud NOT RUN expected — report SKIPPED, not blocked |
+| Code PRs without Sonar | Report MISSING — verify SonarCloud GitHub App is installed |
 | Merge readiness | Conflicts, `mergeStateStatus`, required checks pending |
-| Report format | ✅ Ready / ⚠️ Warnings / ❌ Blocked + checks table + recommendation |
-| CI fix loop | Failed code/test checks → `@bug-fixer` → push → re-check (max 2 loops) |
+| Report format | ✅ Ready / ⚠️ Warnings / ❌ Blocked + checks table + SonarCloud section |
+| CI fix loop | Failed code/test/SonarCloud checks → `@bug-fixer` → push → re-check (max 2 loops) |
 | No auto-merge | Reports "merge: yes/no" — user must say `merge` |
 
 You never invoke these directly during normal phase work — the orchestrator does. Use **`check pr`** anytime to refresh PR status.

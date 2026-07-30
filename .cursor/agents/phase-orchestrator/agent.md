@@ -96,8 +96,9 @@ Phase Start
     │
     ├─ 8. PR CHECK (always after PR create) ───────────────────
     │     → Launch @pr-checker — ALWAYS after gh pr create
-    │     Run gh pr checks, poll until complete (max 10 min) or timeout with "pending"
-    │     If SonarCloud MCP available: quality gate status
+    │     Run gh pr checks + statusCheckRollup; poll until complete (max 10 min)
+    │     Verify SonarCloud GitHub App check: "SonarCloud Code Analysis" (NOT removed workflow)
+    │     If SonarCloud MCP available: get_project_quality_gate_status (secondary)
     │     If checks fail → @bug-fixer for fixable CI issues OR report blockers to user
     │     Include PR check summary in final report
     │     DO NOT auto-merge on green — user still says "merge"
@@ -237,10 +238,19 @@ Create PR with `gh pr create`:
 **ALWAYS** run immediately after `gh pr create`. Launch `@pr-checker` via Task with the new PR number.
 
 ```bash
-# pr-checker polls checks (max 10 min)
+# pr-checker polls checks (max 10 min) and verifies SonarCloud GitHub App
 gh pr checks {N} --watch --interval 30
-gh pr view {N} --json state,statusCheckRollup,mergeable,url
+gh pr view {N} --json state,statusCheckRollup,mergeable,url,files
 ```
+
+**SonarCloud verification (via @pr-checker):**
+
+- **Primary:** GitHub App check **`SonarCloud Code Analysis`** from `statusCheckRollup`
+- **Secondary:** SonarCloud MCP `get_project_quality_gate_status` when authenticated
+- **Docs-only PRs** (`.cursor/`, `*.md` only): SonarCloud may not run — pr-checker reports SKIPPED, not failure
+- **Code PRs** without SonarCloud check: pr-checker reports MISSING — verify App installation
+
+There is **no** `.github/workflows/sonarqube.yml` — do not look for `SonarCloud / SonarCloud Analysis`.
 
 **CI fix loop (when checks fail due to code/test issues):**
 
@@ -248,9 +258,9 @@ gh pr view {N} --json state,statusCheckRollup,mergeable,url
 @pr-checker → fail? → @bug-fixer (CI logs) → push → @pr-checker (max 2 loops)
 ```
 
-- **Fixable:** test failures, lint errors, SonarCloud code issues → `@bug-fixer`
-- **Not fixable:** missing secrets, permissions, merge conflicts → report blockers to user
-- **All green:** report ✅ Ready — still **do NOT merge**
+- **Fixable:** test failures, lint errors, SonarCloud quality gate failures (e.g. Security Rating on New Code) → `@bug-fixer`
+- **Not fixable:** SonarCloud App not installed, permissions, merge conflicts → report blockers to user
+- **All green (or docs-only SonarCloud SKIPPED):** report ✅ Ready — still **do NOT merge**
 
 User can also say `check pr` or `check pr {N}` anytime to re-run `@pr-checker` without re-running the full pipeline.
 
@@ -322,7 +332,7 @@ Then update `WORKFLOW.md` phase checklist (mark phase complete). Commit checklis
 | Phase already has open PR | Report existing PR; ask merge or continue fixes |
 | CI checks fail after PR | `@bug-fixer` → push → `@pr-checker` (max 2 loops); then report blockers |
 | CI checks pending > 10 min | Report pending checks; user can `check pr N` later |
-| SonarCloud MCP not authed | pr-checker reports SKIPPED; rely on GitHub SonarCloud workflow |
+| SonarCloud MCP not authed | pr-checker reports MCP SKIPPED; rely on GitHub App check *SonarCloud Code Analysis* |
 
 ---
 
@@ -336,7 +346,7 @@ Then update `WORKFLOW.md` phase checklist (mark phase complete). Commit checklis
 - [ ] Fix loops within limits
 - [ ] Branch pushed
 - [ ] PR created with full template
-- [ ] pr-checker run — CI/SonarCloud/merge readiness recorded
+- [ ] pr-checker run — SonarCloud Code Analysis App check + CI/merge readiness recorded
 - [ ] User report includes PR URL, PR check status, audit, QA
 - [ ] Did NOT merge without explicit user request
 
