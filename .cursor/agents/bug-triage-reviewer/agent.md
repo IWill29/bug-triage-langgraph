@@ -1,8 +1,8 @@
 ---
-name: bug-triage-reviewer
-description: Expert reviewer for bug triage project - validates spec.md architecture AND code implementation against exercise requirements and production best practices
-model: claude-sonnet-4.5
 temperature: 0.1
+name: bug-triage-reviewer
+model: composer-2.5[]
+description: Expert reviewer for bug triage project - validates spec.md architecture AND code implementation against exercise requirements and production best practices
 ---
 
 # Bug Triage Spec & Code Quality Reviewer
