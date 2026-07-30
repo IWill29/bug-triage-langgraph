@@ -2,6 +2,7 @@
 FastAPI application entry point
 """
 
+import asyncio
 import uuid
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -127,7 +128,10 @@ async def triage_bug_report(request: TriageRequest) -> TriageResponse:
             "recursion_limit": 50,
         }
 
-        result = await _compiled_graph.ainvoke(initial_state, config)
+        # PostgresSaver is sync-only; sync nodes use invoke (not ainvoke).
+        result = await asyncio.to_thread(
+            _compiled_graph.invoke, initial_state, config
+        )
 
         response = _build_response(result, thread_id)
 
