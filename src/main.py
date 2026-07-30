@@ -34,10 +34,7 @@ async def lifespan(app: FastAPI):
     )
 
     _checkpointer = setup_checkpointer()
-    _compiled_graph = build_graph().compile(
-        checkpointer=_checkpointer,
-        recursion_limit=50,
-    )
+    _compiled_graph = build_graph().compile(checkpointer=_checkpointer)
 
     logger.info("services_ready")
 
@@ -125,7 +122,10 @@ async def triage_bug_report(request: TriageRequest) -> TriageResponse:
             bug_report_text=request.report,
             thread_id=thread_id,
         )
-        config = {"configurable": {"thread_id": thread_id}}
+        config = {
+            "configurable": {"thread_id": thread_id},
+            "recursion_limit": 50,
+        }
 
         result = await _compiled_graph.ainvoke(initial_state, config)
 

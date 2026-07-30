@@ -28,7 +28,10 @@ async def test_triage(report: str) -> dict:
 
     graph = build_graph().compile(checkpointer=MemorySaver())
     initial_state = create_initial_state(bug_report_text=report, thread_id=thread_id)
-    config = {"configurable": {"thread_id": thread_id}}
+    config = {
+        "configurable": {"thread_id": thread_id},
+        "recursion_limit": 50,
+    }
 
     result = await graph.ainvoke(initial_state, config)
 
