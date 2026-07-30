@@ -4,6 +4,7 @@ Validate node - schema and business rule validation with fallback defaults
 
 from datetime import datetime
 
+from src.config import settings
 from src.graph.state import BugTriageState
 from src.utils.logging import logger
 
@@ -80,7 +81,15 @@ def validate_node(state: BugTriageState) -> dict:
         duration_ms=duration_ms,
     )
 
-    return {
+    result: dict = {
         "validation_passed": True,
         "node_timings": [{"node": "validate", "duration_ms": duration_ms}],
     }
+
+    if state.get("confidence", 0.0) < settings.confidence_threshold:
+        result["needs_human_review"] = True
+        result["processing_warnings"] = [
+            f"Low confidence ({state.get('confidence', 0.0):.2f}) - flagged for human review"
+        ]
+
+    return result

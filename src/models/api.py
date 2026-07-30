@@ -3,7 +3,7 @@ API request/response models
 Pydantic schemas for FastAPI endpoints
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Literal
 
 
@@ -21,6 +21,14 @@ class TriageRequest(BaseModel):
         default=None,
         description="Optional thread ID for resuming execution"
     )
+
+    @field_validator("report")
+    @classmethod
+    def strip_and_reject_whitespace_only(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("Report cannot be empty or whitespace only")
+        return stripped
 
 
 class TriageResponse(BaseModel):

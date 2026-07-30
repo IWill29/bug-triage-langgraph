@@ -73,7 +73,12 @@ def _extraction_to_state(
             f"Multiple issues detected. Secondary: {', '.join(result.secondary_issues)}"
         )
 
-    return {
+    if result.confidence < settings.confidence_threshold:
+        warnings.append(
+            f"Low confidence ({result.confidence:.2f}) - flagged for human review"
+        )
+
+    delta: dict = {
         "title": result.title,
         "severity": result.severity,
         "components": list(result.components),
@@ -90,6 +95,11 @@ def _extraction_to_state(
             "timestamp": datetime.now().isoformat(),
         }],
     }
+
+    if result.confidence < settings.confidence_threshold:
+        delta["needs_human_review"] = True
+
+    return delta
 
 
 def fast_triage_node(state: BugTriageState) -> dict:

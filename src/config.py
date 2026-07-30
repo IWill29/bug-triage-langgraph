@@ -3,11 +3,16 @@ Configuration management for the triage service
 Loads settings from environment variables
 """
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        extra="ignore",
+    )
     """Application configuration loaded from environment"""
     
     # Database
@@ -35,6 +40,7 @@ class Settings(BaseSettings):
     fast_model: str = "gpt-4o-mini"
     premium_model: str = "gpt-4o"
     embedding_model: str = "text-embedding-3-large"
+    embedding_dimensions: int = 1536
     
     # Thresholds
     confidence_threshold: float = 0.70
@@ -43,10 +49,6 @@ class Settings(BaseSettings):
     
     # Retry limits
     max_retries: int = 3
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
 
 
 # Global settings instance
