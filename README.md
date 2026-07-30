@@ -177,7 +177,7 @@ Static analysis via [SonarCloud](https://sonarcloud.io/project/overview?id=IWill
 3. Confirm `sonar.organization` in `sonar-project.properties` matches your SonarCloud org (default: `IWill29`), or set env `SONAR_ORGANIZATION` in CI.
 4. For Cursor MCP: `sonar auth login -o IWill29` (SonarCloud), then restart Cursor.
 
-CI runs on push to `main` and on PRs ([`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml)). View results on the [SonarCloud dashboard](https://sonarcloud.io/project/overview?id=IWill29_bug-triage-langgraph).
+CI runs on push to `main` and on PRs. If `SONAR_TOKEN` is not set, the workflow completes successfully with a notice (scan skipped) ([`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml)). View results on the [SonarCloud dashboard](https://sonarcloud.io/project/overview?id=IWill29_bug-triage-langgraph).
 
 ### Running Tests
 
