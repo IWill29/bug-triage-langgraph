@@ -92,7 +92,7 @@ Build a service that transforms free-text bug reports into structured, triaged i
 4. **Structured outputs** - Pydantic validation on all LLM responses
 5. **Bounded retries** - Max 2-3 attempts with error feedback
 6. **Graceful degradation** - Safe defaults when all retries fail
-7. **Observable by default** - Structured logging + LangSmith tracing
+7. **Observable by default** - Structured logging (structlog only; LangSmith removed)
 
 ---
 
@@ -125,8 +125,7 @@ Build a service that transforms free-text bug reports into structured, triaged i
 - **Gitea** - Self-hosted issue tracker (seeded with test data)
 
 ### Observability
-- **LangSmith** - LangGraph tracing and monitoring
-- **structlog** - Structured JSON logging
+- **structlog** - Structured JSON logging (LangSmith removed)
 - **Prometheus** (optional) - Metrics export
 
 ### Testing
@@ -1321,9 +1320,6 @@ services:
       - GITEA_URL=http://gitea:3000
       - GITEA_TOKEN=${GITEA_TOKEN}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
-      - LANGSMITH_PROJECT=bug-triage-prod
-      - LANGSMITH_TRACING=true
     ports:
       - "8000:8000"
     depends_on:
@@ -1344,7 +1340,6 @@ DB_PASSWORD=secure_password_here
 GITEA_DB_PASSWORD=gitea_password_here
 GITEA_TOKEN=your_gitea_api_token
 OPENAI_API_KEY=sk-proj-...
-LANGSMITH_API_KEY=lsv2_pt_...
 ```
 
 ### PostgreSQL Checkpointer Setup
@@ -1671,34 +1666,7 @@ SAMPLE_REPORTS = {
 
 ## Monitoring & Observability
 
-### LangSmith Integration
-
-**Environment Setup:**
-```bash
-export LANGSMITH_TRACING=true
-export LANGSMITH_API_KEY=lsv2_pt_...
-export LANGSMITH_PROJECT=bug-triage-prod
-export LANGSMITH_TRACING_SAMPLING_RATE=0.1  # 10% sampling
-```
-
-**What You Get:**
-- Per-node latency (p50, p95, p99)
-- Token usage and costs per triage
-- LLM call traces with prompts/responses
-- Error rate by node
-- State transitions visualization
-
-**Custom Tracing:**
-```python
-from langsmith import traceable
-
-@traceable(name="embed_for_duplicate_check")
-def generate_embedding(text: str) -> list[float]:
-    """Traced embedding generation."""
-    return embedding_model.embed(text)
-```
-
----
+> **Note:** LangSmith tracing was removed from this project. Observability uses **structlog only** (see below).
 
 ### Structured Logging
 
@@ -1832,7 +1800,6 @@ duplicate_detections = Counter(
 - [ ] Error handlers for all nodes
 - [ ] Graceful shutdown
 - [ ] Structured logging
-- [ ] LangSmith tracing
 
 ### Phase 6: Testing (Day 6)
 - [ ] Unit tests (node functions)

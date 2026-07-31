@@ -190,7 +190,7 @@ gh pr merge {number} --squash
 
 **Scope:**
 
-- Observability (LangSmith, structured logging)
+- Observability (structlog only; LangSmith removed)
 - Duplicate detection validation script
 - Empty/hostile input handling
 - Rate limiting
