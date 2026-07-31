@@ -777,32 +777,7 @@ def fast_triage_node(state: BugTriageState) -> dict:
 
 ---
 
-### LangSmith Integration
-
-```python
-import os
-
-# Environment setup
-os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGSMITH_API_KEY"] = "lsv2_pt_..."
-os.environ["LANGSMITH_PROJECT"] = "bug-triage-prod"
-os.environ["LANGSMITH_TRACING_SAMPLING_RATE"] = "0.1"  # 10%
-
-# Custom tracing for non-LLM functions
-from langsmith import traceable
-
-@traceable(name="embed_for_duplicate_check")
-def generate_embedding(text: str) -> list[float]:
-    """Traced embedding generation."""
-    return embedding_model.embed(text)
-```
-
-**What you get:**
-- Per-node latency (p50, p95, p99)
-- Token usage and costs
-- LLM traces with prompts/responses
-- Error rate by node
-- State transition visualization
+> **Note:** LangSmith tracing was removed from this project. Use **structlog only** for observability.
 
 ---
 
@@ -947,7 +922,6 @@ app = graph.compile(
 
 ### Official Documentation
 - [LangGraph Docs](https://langchain-ai.github.io/langgraph/)
-- [LangSmith Tracing](https://docs.smith.langchain.com/)
 - [Pydantic Validation](https://docs.pydantic.dev/latest/)
 
 ### Production Patterns

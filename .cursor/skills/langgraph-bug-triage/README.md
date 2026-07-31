@@ -89,6 +89,5 @@ def compiled_graph():
 ## Additional Resources
 
 - [LangGraph Official Docs](https://langchain-ai.github.io/langgraph/)
-- [LangSmith Tracing](https://docs.smith.langchain.com/)
 - [LangGraph Design Patterns](https://github.com/SaqlainXoas/langgraph-design-patterns)
 - [Production Patterns Article](https://www.kalviumlabs.ai/blog/langgraph-in-production-stateful-multi-step-agents/)
