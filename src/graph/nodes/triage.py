@@ -65,6 +65,8 @@ Re-extract with higher accuracy. Focus on:
 def _extraction_to_state(
     result: TriageExtraction,
     model: str,
+    *,
+    sticky_human_review: bool = False,
 ) -> dict:
     """Map TriageExtraction to state delta."""
     warnings: list[str] = []
@@ -73,9 +75,17 @@ def _extraction_to_state(
             f"Multiple issues detected. Secondary: {', '.join(result.secondary_issues)}"
         )
 
-    if result.confidence < settings.confidence_threshold:
+    flag_human_review = (
+        result.confidence <= settings.confidence_threshold or sticky_human_review
+    )
+
+    if result.confidence <= settings.confidence_threshold:
         warnings.append(
             f"Low confidence ({result.confidence:.2f}) - flagged for human review"
+        )
+    elif sticky_human_review:
+        warnings.append(
+            f"Human review preserved after retry (confidence {result.confidence:.2f})"
         )
 
     delta: dict = {
@@ -96,7 +106,7 @@ def _extraction_to_state(
         }],
     }
 
-    if result.confidence < settings.confidence_threshold:
+    if flag_human_review:
         delta["needs_human_review"] = True
 
     return delta
@@ -179,7 +189,15 @@ def premium_retry_node(state: BugTriageState) -> dict:
     try:
         prompt = _build_premium_prompt(state)
         result = llm_service.invoke_premium(prompt, TriageExtraction)
-        delta = _extraction_to_state(result, settings.premium_model)
+        sticky_human_review = (
+            state.get("needs_human_review", False)
+            or state.get("confidence", 0.0) <= settings.confidence_threshold
+        )
+        delta = _extraction_to_state(
+            result,
+            settings.premium_model,
+            sticky_human_review=sticky_human_review,
+        )
         delta["retry_count"] = state.get("retry_count", 0) + 1
         delta["used_premium_model"] = True
     except ValidationError as exc:
@@ -242,7 +260,7 @@ def route_confidence(
     if state.get("retry_count", 0) >= settings.max_retries:
         return "duplicate_check"
 
-    if state.get("confidence", 0.0) < settings.confidence_threshold:
+    if state.get("confidence", 0.0) <= settings.confidence_threshold:
         return "premium_retry"
 
     return "validate"
