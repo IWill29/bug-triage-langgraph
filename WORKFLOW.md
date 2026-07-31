@@ -7,7 +7,7 @@ You drive the project with **one command**. The [phase-orchestrator](.cursor/age
 | Command | What happens |
 |---------|--------------|
 | **`start phase 2`** | Full pipeline for Phase 2: branch → implement → audit → QA → fix loops → PR |
-| **`next`** / **`continue`** | Same pipeline for the next unchecked phase (currently Phase 3) |
+| **`next`** / **`continue`** | Same pipeline for the next unchecked phase (currently Phase 4) |
 | **`merge`** / **`merge pr`** | Squash-merge the open phase PR (only when you approve) |
 | **`status`** | Phase checklist, open PRs, last audit/QA summary |
 | **`check pr`** | CI status for open phase PR (SonarCloud App + other checks) — no merge |
@@ -64,10 +64,12 @@ You never invoke these directly during normal phase work — the orchestrator do
 - [x] **Phase 2:** Workflow nodes (merged [PR #6](https://github.com/IWill29/bug-triage-langgraph/pull/6) → `2bddf5b` on `main`)
   - CI: SonarCloud ✅ | CodeRabbit ✅ | unit tests 15/15 ✅
   - QA: **partial** — Set B live deferred; full validation planned Phase 4
-- [ ] **Phase 3:** Production hardening — **IN PROGRESS** (`phase-3-production-hardening` PR pending)
-- [ ] **Phase 4:** Testing (`phase-4-testing`)
+- [x] **Phase 3:** Production hardening (merged [PR #7](https://github.com/IWill29/bug-triage-langgraph/pull/7) → `826c38d` on `main`)
+  - CI: SonarCloud ✅ | unit + integration 28/28 ✅ (mocked)
+  - QA: **partial** — live Set B 0/7; deferred to Phase 4
+- [ ] **Phase 4:** Testing — **NEXT** (`phase-4-testing`)
 
-Say **`merge`** when Phase 3 PR is approved. Say **`next`** or **`start phase 4`** after merge.
+Say **`next`** or **`start phase 4`** for full Set B validation + integration test coverage. Optional: start Docker + set `GITEA_TOKEN`/`DB_PASSWORD` for live QA.
 
 ## Phase Scope (quick reference)
 
