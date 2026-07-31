@@ -7,7 +7,7 @@ You drive the project with **one command**. The [phase-orchestrator](.cursor/age
 | Command | What happens |
 |---------|--------------|
 | **`start phase 2`** | Full pipeline for Phase 2: branch → implement → audit → QA → fix loops → PR |
-| **`next`** / **`continue`** | Same pipeline for the next unchecked phase (currently Phase 4) |
+| **`next`** / **`continue`** | Same pipeline for the next unchecked phase (none — all phases merged) |
 | **`merge`** / **`merge pr`** | Squash-merge the open phase PR (only when you approve) |
 | **`status`** | Phase checklist, open PRs, last audit/QA summary |
 | **`check pr`** | CI status for open phase PR (SonarCloud App + other checks) — no merge |
@@ -67,11 +67,11 @@ You never invoke these directly during normal phase work — the orchestrator do
 - [x] **Phase 3:** Production hardening (merged [PR #7](https://github.com/IWill29/bug-triage-langgraph/pull/7) → `826c38d` on `main`)
   - CI: SonarCloud ✅ | unit + integration 28/28 ✅ (mocked)
   - QA: **partial** — live Set B 0/7; deferred to Phase 4
-- [ ] **Phase 4:** Testing — **IN PROGRESS** ([PR #8](https://github.com/IWill29/bug-triage-langgraph/pull/8), branch `phase-4-testing`)
+- [x] **Phase 4:** Testing (merged [PR #8](https://github.com/IWill29/bug-triage-langgraph/pull/8) → `374c7cf` on `main`)
   - Tests: **47/47** pass | Set B **7/7 mocked** via `scripts/run_set_b.py`
-  - QA: **partial** — live Set B blocked (Docker / keys)
+  - QA: **partial** — live Set B optional (`docker compose up -d` + `python scripts/run_set_b.py --live`)
 
-Say **`merge`** when PR #8 CI passes. Optional: `docker compose up -d` + `python scripts/run_set_b.py --live` before merge.
+**All implementation phases (0–4) are complete on `main`.**
 
 ## Phase Scope (quick reference)
 
