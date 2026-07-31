@@ -65,6 +65,6 @@ Both are intentional: Gitea satisfies the exercise infra requirement; GitHub is 
 
 ## Known gaps / honest limits
 
-- **Gitea PR (brief ground rule):** push to Gitea and open evaluator PR — not automated here (GitHub used for dev).
+- **Gitea PR (brief ground rule):** ✅ [PR #16](http://localhost:3000/triagebot/bug-reports/pulls/16) (`candidate/langpath-implementation` -> `main`; GitHub remains dev/CI).
 - **Embedding search** compares against Gitea issue list in memory — sufficient for Set A size.
 - **SonarCloud / phase orchestrator** — dev tooling, not required by brief.
