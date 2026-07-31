@@ -28,6 +28,15 @@ from src.graph.nodes.gitea import (
 from src.utils.logging import logger
 
 
+def route_after_preprocess(
+    state: BugTriageState,
+) -> Literal["risk_check", "human_review"]:
+    """Skip LLM pipeline for rejected hostile/off-topic/too-short input."""
+    if state.get("input_rejected", False):
+        return "human_review"
+    return "risk_check"
+
+
 def route_risk_level(
     state: BugTriageState,
 ) -> Literal["fast_triage", "human_review"]:
@@ -140,7 +149,14 @@ def build_graph() -> StateGraph:
     graph.add_node("human_review", human_review_node)
 
     graph.set_entry_point("preprocess")
-    graph.add_edge("preprocess", "risk_check")
+    graph.add_conditional_edges(
+        "preprocess",
+        route_after_preprocess,
+        {
+            "risk_check": "risk_check",
+            "human_review": "human_review",
+        },
+    )
 
     graph.add_conditional_edges(
         "risk_check",

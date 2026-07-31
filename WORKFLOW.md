@@ -7,7 +7,7 @@ You drive the project with **one command**. The [phase-orchestrator](.cursor/age
 | Command | What happens |
 |---------|--------------|
 | **`start phase 2`** | Full pipeline for Phase 2: branch → implement → audit → QA → fix loops → PR |
-| **`next`** / **`continue`** | Same pipeline for the next unchecked phase (currently Phase 2) |
+| **`next`** / **`continue`** | Same pipeline for the next unchecked phase (currently Phase 3) |
 | **`merge`** / **`merge pr`** | Squash-merge the open phase PR (only when you approve) |
 | **`status`** | Phase checklist, open PRs, last audit/QA summary |
 | **`check pr`** | CI status for open phase PR (SonarCloud App + other checks) — no merge |
@@ -61,13 +61,13 @@ You never invoke these directly during normal phase work — the orchestrator do
 
 - [x] **Phase 0:** Architecture (on `main`)
 - [x] **Phase 1:** Infrastructure (merged [PR #2](https://github.com/IWill29/bug-triage-langgraph/pull/2))
-- [ ] **Phase 2:** Workflow nodes — **IN PROGRESS** ([PR #6](https://github.com/IWill29/bug-triage-langgraph/pull/6), branch `phase-2-workflow-nodes`)
-  - CI: SonarCloud ✅ | unit tests 15/15 ✅ | `/api/triage` invoke fix (`cfc2f6a`)
-  - QA: **BLOCKED** — Set B needs real `OPENAI_API_KEY` + `GITEA_TOKEN` + Gitea Set A seed
-- [ ] **Phase 3:** Production hardening (`phase-3-production-hardening`)
+- [x] **Phase 2:** Workflow nodes (merged [PR #6](https://github.com/IWill29/bug-triage-langgraph/pull/6) → `2bddf5b` on `main`)
+  - CI: SonarCloud ✅ | CodeRabbit ✅ | unit tests 15/15 ✅
+  - QA: **partial** — Set B live deferred; full validation planned Phase 4
+- [ ] **Phase 3:** Production hardening — **IN PROGRESS** (`phase-3-production-hardening` PR pending)
 - [ ] **Phase 4:** Testing (`phase-4-testing`)
 
-Phase 2 PR is open — add keys + Gitea setup, then **`next`** to re-run Set B QA, or **`merge`** to land code and defer live QA to Phase 4.
+Say **`merge`** when Phase 3 PR is approved. Say **`next`** or **`start phase 4`** after merge.
 
 ## Phase Scope (quick reference)
 

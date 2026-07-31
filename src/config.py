@@ -31,10 +31,15 @@ class Settings(BaseSettings):
     langsmith_api_key: Optional[str] = None
     langsmith_project: str = "bug-triage-dev"
     langsmith_tracing: bool = True
-    
+    langsmith_sampling_rate: float = 0.1
+
     # Application
     environment: str = "development"
     log_level: str = "INFO"
+
+    # Rate limiting (POST /api/triage)
+    rate_limit_requests: int = 10
+    rate_limit_window_seconds: int = 60
     
     # LLM Models
     fast_model: str = "gpt-4o-mini"

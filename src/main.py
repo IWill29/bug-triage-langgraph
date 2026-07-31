@@ -5,12 +5,13 @@ FastAPI application entry point
 import asyncio
 import uuid
 from contextlib import asynccontextmanager
-from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 
 from src.config import settings
 from src.utils.logging import setup_logging, logger
+from src.utils.observability import configure_langsmith
+from src.middleware.rate_limit import RateLimitMiddleware
 from src.models.api import TriageRequest, TriageResponse
 from src.graph.workflow import build_graph
 from src.graph.checkpointer import setup_checkpointer, close_checkpointer
@@ -18,6 +19,7 @@ from src.graph.state import create_initial_state
 
 
 setup_logging()
+configure_langsmith(settings)
 
 _compiled_graph = None
 _checkpointer = None
@@ -52,6 +54,12 @@ app = FastAPI(
     description="LangGraph-based automated issue triage system",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    RateLimitMiddleware,
+    max_requests=settings.rate_limit_requests,
+    window_seconds=settings.rate_limit_window_seconds,
 )
 
 

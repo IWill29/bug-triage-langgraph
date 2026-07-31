@@ -21,6 +21,8 @@ class BugTriageState(TypedDict):
     cleaned_report: Optional[str]           # Noise-stripped text
     extracted_stacktrace: Optional[str]     # Isolated stack trace
     stacktrace_hash: Optional[str]          # Hash for fast dedup
+    input_rejected: bool                    # Off-topic/too-short/hostile — skip LLM
+    input_quality: Optional[Literal["valid", "off_topic", "too_short", "hostile"]]
     
     # ========== RISK ASSESSMENT ==========
     risk_level: Optional[Literal["safe", "review", "escalate"]]
@@ -66,6 +68,8 @@ def create_initial_state(bug_report_text: str, thread_id: str) -> dict:
         "cleaned_report": None,
         "extracted_stacktrace": None,
         "stacktrace_hash": None,
+        "input_rejected": False,
+        "input_quality": "valid",
         "risk_level": None,
         "risk_signals": [],
         "title": None,

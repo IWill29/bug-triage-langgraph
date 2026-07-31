@@ -33,13 +33,19 @@ def human_review_node(state: BugTriageState) -> dict:
 
     duration_ms = (datetime.now() - start).total_seconds() * 1000
 
+    if state.get("input_rejected"):
+        reason = state.get("input_quality") or "invalid"
+        warning = f"Input rejected ({reason}) — requires human review"
+    else:
+        warning = f"Report flagged for human review (risk_level={state.get('risk_level')})"
+
+    default_severity = "medium" if state.get("input_rejected") else "high"
+
     return {
         "title": title,
-        "severity": state.get("severity") or "high",
+        "severity": state.get("severity") or default_severity,
         "needs_human_review": True,
-        "processing_warnings": [
-            f"Report flagged for human review (risk_level={state.get('risk_level')})"
-        ],
+        "processing_warnings": [warning],
         "node_timings": [{"node": "human_review", "duration_ms": duration_ms}],
     }
 

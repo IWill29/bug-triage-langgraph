@@ -6,6 +6,8 @@ Pydantic schemas for FastAPI endpoints
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Literal
 
+from src.utils.input_safety import MAX_REPORT_LENGTH
+
 
 class TriageRequest(BaseModel):
     """
@@ -14,7 +16,8 @@ class TriageRequest(BaseModel):
     
     report: str = Field(
         description="Raw bug report text",
-        min_length=1
+        min_length=1,
+        max_length=MAX_REPORT_LENGTH,
     )
     
     thread_id: Optional[str] = Field(
