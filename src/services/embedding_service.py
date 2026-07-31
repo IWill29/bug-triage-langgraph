@@ -10,6 +10,14 @@ import numpy as np
 from src.config import settings
 from src.utils.logging import logger
 
+try:
+    from langsmith import traceable
+except ImportError:  # pragma: no cover
+    def traceable(**kwargs):  # type: ignore[misc]
+        def decorator(func):
+            return func
+        return decorator
+
 
 class EmbeddingService:
     """
@@ -25,6 +33,7 @@ class EmbeddingService:
             dimensions=settings.embedding_dimensions,
         )
     
+    @traceable(name="embed_for_duplicate_check")
     def generate_embedding(self, text: str) -> List[float]:
         """
         Generate embedding vector for text
