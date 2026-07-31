@@ -18,17 +18,16 @@ CREATE TABLE IF NOT EXISTS issue_embeddings (
     issue_id INTEGER PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
-    embedding vector(3072),  -- text-embedding-3-large dimensions
+    embedding vector(1536),  -- text-embedding-3-large truncated (ivfflat/hnsw max 2000 dims)
     stacktrace_hash TEXT,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create index for fast similarity search
+-- Create index for fast similarity search (HNSW supports up to 2000 dims)
 CREATE INDEX IF NOT EXISTS issue_embeddings_embedding_idx 
 ON issue_embeddings 
-USING ivfflat (embedding vector_cosine_ops)
-WITH (lists = 100);
+USING hnsw (embedding vector_cosine_ops);
 
 -- Create index for stacktrace hash lookup
 CREATE INDEX IF NOT EXISTS issue_embeddings_stacktrace_hash_idx 

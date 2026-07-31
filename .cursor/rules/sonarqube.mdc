@@ -43,7 +43,7 @@ Project key: `IWill29_bug-triage-langgraph` (from `sonar-project.properties`).
 
 Full-repo analysis and **Quality Gate** on pull requests run through the [SonarCloud GitHub App](https://github.com/apps/sonarcloud), not a local GitHub Actions workflow. There is **no** `.github/workflows/sonarqube.yml`. The PR check *SonarCloud Code Analysis* is the source of truth for merge gating.
 
-The **pr-checker** agent uses SonarCloud MCP (`get_project_quality_gate_status`, issue listing) when MCP is authenticated — complementing the App check before merge.
+The **phase-orchestrator** (`check pr` trigger) reports SonarCloud via `gh pr checks`; when MCP is authenticated, it may also use SonarCloud MCP (`get_project_quality_gate_status`, issue listing) — complementing the App check before merge.
 
 Do **not** configure or scan against a local SonarQube server (`localhost:9000`).
 

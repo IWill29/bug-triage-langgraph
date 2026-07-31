@@ -14,14 +14,15 @@ from src.utils.logging import logger
 class EmbeddingService:
     """
     Embedding generation for duplicate detection
-    Uses OpenAI text-embedding-3-large (3072 dimensions)
+    Uses OpenAI text-embedding-3-large (1536 dimensions via truncation)
     """
     
     def __init__(self):
         """Initialize OpenAI embeddings"""
         self.embeddings = OpenAIEmbeddings(
             model=settings.embedding_model,
-            api_key=settings.openai_api_key
+            api_key=settings.openai_api_key,
+            dimensions=settings.embedding_dimensions,
         )
     
     def generate_embedding(self, text: str) -> List[float]:
@@ -32,7 +33,7 @@ class EmbeddingService:
             text: Input text to embed
             
         Returns:
-            3072-dimensional embedding vector
+            1536-dimensional embedding vector
         """
         logger.debug(
             "generate_embedding",

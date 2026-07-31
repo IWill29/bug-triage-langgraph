@@ -145,6 +145,80 @@ class GiteaService:
         """Close HTTP client"""
         await self.client.aclose()
 
+    def create_issue_sync(
+        self,
+        title: str,
+        body: str,
+        labels: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Synchronous issue creation for LangGraph sync nodes."""
+        logger.info(
+            "gitea_create_issue_sync",
+            title=title,
+            labels=labels or [],
+        )
+
+        url = f"/api/v1/repos/{self.repo_owner}/{self.repo_name}/issues"
+        payload = {
+            "title": title,
+            "body": body,
+            "labels": [self._get_label_id(label) for label in (labels or [])],
+        }
+
+        with httpx.Client(
+            base_url=self.base_url,
+            headers={
+                "Authorization": f"token {self.token}",
+                "Content-Type": "application/json",
+            },
+            timeout=45.0,
+        ) as client:
+            response = client.post(url, json=payload)
+            response.raise_for_status()
+            return response.json()
+
+    def add_comment_sync(self, issue_id: int, body: str) -> Dict[str, Any]:
+        """Synchronous comment creation for LangGraph sync nodes."""
+        logger.info("gitea_add_comment_sync", issue_id=issue_id)
+
+        url = (
+            f"/api/v1/repos/{self.repo_owner}/{self.repo_name}"
+            f"/issues/{issue_id}/comments"
+        )
+
+        with httpx.Client(
+            base_url=self.base_url,
+            headers={
+                "Authorization": f"token {self.token}",
+                "Content-Type": "application/json",
+            },
+            timeout=45.0,
+        ) as client:
+            response = client.post(url, json={"body": body})
+            response.raise_for_status()
+            return response.json()
+
+    def list_issues_sync(
+        self,
+        state: str = "open",
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Synchronous issue listing for duplicate detection."""
+        url = f"/api/v1/repos/{self.repo_owner}/{self.repo_name}/issues"
+        params = {"state": state, "limit": limit}
+
+        with httpx.Client(
+            base_url=self.base_url,
+            headers={
+                "Authorization": f"token {self.token}",
+                "Content-Type": "application/json",
+            },
+            timeout=45.0,
+        ) as client:
+            response = client.get(url, params=params)
+            response.raise_for_status()
+            return response.json()
+
 
 # Global service instance
 gitea_service = GiteaService()
