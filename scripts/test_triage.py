@@ -64,6 +64,9 @@ def main():
         sys.exit(1)
 
     report = sys.argv[1]
+    if not report.strip():
+        print("Error: bug report text cannot be empty or whitespace-only.")
+        sys.exit(1)
     asyncio.run(test_triage(report))
 
 

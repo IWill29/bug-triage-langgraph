@@ -6,13 +6,13 @@ Maps each requirement from [`1_candidate_brief.md`](1_candidate_brief.md) to imp
 
 | # | Brief requirement | Status | Where |
 |---|-------------------|--------|-------|
-| 1 | Free-text → title, severity, labels, repro steps (or explicit none) | ✅ | `src/graph/nodes/triage.py`, `validate.py`; Pydantic schemas in `src/models/triage.py` |
-| 2 | Duplicate check vs open Gitea issues → comment/link, not new issue | ✅ | `src/graph/nodes/duplicate.py` (embedding + LLM verify), `gitea.py` (`comment_on_duplicate_node`) |
-| 3 | Create issue in Gitea (or comment on duplicate) | ✅ | `src/graph/nodes/gitea.py`, `src/services/gitea_service.py` |
-| 4 | Input via HTTP endpoint **and** CLI | ✅ | `POST /api/triage` in `src/main.py`; `scripts/test_triage.py` |
+| 1 | Free-text → title, severity, labels, repro steps (or explicit none) | ✅ | `triage.py`, `validate.py`; `TriageResponse.reproduction_steps` in `api.py` |
+| 2 | Duplicate check vs open Gitea issues → comment/link, not new issue | ✅ | `duplicate.py`, `gitea.py`; live B5 verified against EXIST-1 |
+| 3 | Create issue in Gitea (or comment on duplicate) | ✅ | Includes `human_review` path → `create_bug` |
+| 4 | Input via HTTP endpoint **and** CLI | ✅ | `POST /api/triage` in `src/main.py`; `scripts/test_triage.py` (empty/whitespace rejected) |
 | 5 | `docker-compose` with Gitea + dependencies | ✅ | `docker-compose.yml` (Postgres, Gitea, triage-service) |
 | 6 | Seed Set A in Gitea for duplicate testing | ✅ | `scripts/seed_gitea.py` (EXIST-1 … EXIST-4) |
-| 7 | README + short spec explaining choices and LLM steering | ✅ | This file, `README.md`, `spec.md` §14 Design Decisions |
+| 7 | README + short spec explaining choices and LLM steering | ⚠️ | `README.md` + this file; full `spec.md` is long appendix (brief asked for short spec) |
 | 8 | Runnable demo path documented | ✅ | README Quick Start (steps 1–6) |
 
 ## Set B self-test coverage
@@ -28,7 +28,7 @@ Maps each requirement from [`1_candidate_brief.md`](1_candidate_brief.md) to imp
 | B7 | Multiple issues → warning + secondary list | `test_set_b7_multiple_issues_detected` |
 | B8 | Stacktrace extracted from noisy log | `test_set_b8_noisy_log_extracts_stacktrace` |
 
-Edge cases E1/E2 (empty / whitespace): `tests/integration/test_api_edge_cases.py` → HTTP 422.
+Edge cases E1/E2 (empty / whitespace): `tests/integration/test_api_edge_cases.py` → HTTP 422; CLI rejects empty input in `scripts/test_triage.py`.
 
 ## Framework choice: LangGraph
 
@@ -39,7 +39,7 @@ Chose LangGraph for explicit graph routing (duplicate vs create, feature vs bug,
 | Area | Approach |
 |------|----------|
 | Output shape | Pydantic structured output + validate node with retry |
-| Severity inflation | Validate node can downgrade (B4) |
+| Severity inflation | Validate node downgrades cosmetic critical → low (B4) |
 | Repro steps | Prompt: extract only if present; `reproduction_steps` nullable |
 | Duplicates | Two-stage: embedding pre-filter + LLM confirmation (avoids false merges) |
 | Vague / hostile input | `input_safety.py` + risk_check; reject empty at API (422) |
@@ -65,6 +65,6 @@ Both are intentional: Gitea satisfies the exercise infra requirement; GitHub is 
 
 ## Known gaps / honest limits
 
-- **Live duplicate detection (B5)** requires seeded Gitea + valid `GITEA_TOKEN` + live OpenAI for embeddings/LLM — mocked in CI (`tests/fixtures/set_b_mocks.py`).
-- **Embedding search** compares against Gitea issue list in memory (not pgvector DB) — simpler, sufficient for Set A size.
+- **Gitea PR (brief ground rule):** push to Gitea and open evaluator PR — not automated here (GitHub used for dev).
+- **Embedding search** compares against Gitea issue list in memory — sufficient for Set A size.
 - **SonarCloud / phase orchestrator** — dev tooling, not required by brief.

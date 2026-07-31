@@ -3,8 +3,9 @@ Gitea API client
 Handles issue creation and management
 """
 
+from __future__ import annotations
+
 import httpx
-from typing import Optional, List, Dict, Any
 
 from src.config import settings
 from src.utils.logging import logger
@@ -14,29 +15,68 @@ class GiteaService:
     """
     Gitea API client for issue management
     """
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
         """Initialize HTTP client with authentication"""
         self.base_url = settings.gitea_url
         self.token = settings.gitea_token
         self.repo_owner = settings.gitea_repo_owner
         self.repo_name = settings.gitea_repo_name
-        
+        self._label_id_cache: dict[str, int] = {}
+
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             headers={
                 "Authorization": f"token {self.token}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
-            timeout=30.0
+            timeout=30.0,
         )
+
+    def _auth_headers(self) -> dict[str, str]:
+        return {
+            "Authorization": f"token {self.token}",
+            "Content-Type": "application/json",
+        }
+
+    def _get_label_id(self, label_name: str) -> int:
+        """Resolve label name to Gitea label ID, creating the label if missing."""
+        cache_key = label_name.lower()
+        if cache_key in self._label_id_cache:
+            return self._label_id_cache[cache_key]
+
+        labels_url = f"/api/v1/repos/{self.repo_owner}/{self.repo_name}/labels"
+
+        with httpx.Client(
+            base_url=self.base_url,
+            headers=self._auth_headers(),
+            timeout=45.0,
+        ) as client:
+            response = client.get(labels_url)
+            response.raise_for_status()
+            for label in response.json():
+                name = str(label.get("name", ""))
+                if name.lower() == cache_key:
+                    label_id = int(label["id"])
+                    self._label_id_cache[cache_key] = label_id
+                    return label_id
+
+            create_response = client.post(
+                labels_url,
+                json={"name": label_name, "color": "#cccccc"},
+            )
+            create_response.raise_for_status()
+            label_id = int(create_response.json()["id"])
+            self._label_id_cache[cache_key] = label_id
+            logger.info("gitea_label_created", label=label_name, label_id=label_id)
+            return label_id
     
     async def create_issue(
         self,
         title: str,
         body: str,
-        labels: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        labels: list[str] | None = None,
+    ) -> dict:
         """
         Create new issue in Gitea
         
@@ -78,8 +118,8 @@ class GiteaService:
     async def add_comment(
         self,
         issue_id: int,
-        body: str
-    ) -> Dict[str, Any]:
+        body: str,
+    ) -> dict:
         """
         Add comment to existing issue
         
@@ -107,8 +147,8 @@ class GiteaService:
     async def list_issues(
         self,
         state: str = "open",
-        limit: int = 100
-    ) -> List[Dict[str, Any]]:
+        limit: int = 100,
+    ) -> list[dict]:
         """
         List issues in repository
         
@@ -131,26 +171,12 @@ class GiteaService:
         
         return response.json()
     
-    def _get_label_id(self, label_name: str) -> int:
-        """
-        Get label ID by name
-        
-        TODO: Implement label lookup/creation
-        For now, returns dummy ID
-        """
-        # TODO: Cache label IDs
-        return 0
-    
-    async def close(self):
-        """Close HTTP client"""
-        await self.client.aclose()
-
     def create_issue_sync(
         self,
         title: str,
         body: str,
-        labels: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        labels: list[str] | None = None,
+    ) -> dict:
         """Synchronous issue creation for LangGraph sync nodes."""
         logger.info(
             "gitea_create_issue_sync",
@@ -177,7 +203,7 @@ class GiteaService:
             response.raise_for_status()
             return response.json()
 
-    def add_comment_sync(self, issue_id: int, body: str) -> Dict[str, Any]:
+    def add_comment_sync(self, issue_id: int, body: str) -> dict:
         """Synchronous comment creation for LangGraph sync nodes."""
         logger.info("gitea_add_comment_sync", issue_id=issue_id)
 
@@ -202,7 +228,7 @@ class GiteaService:
         self,
         state: str = "open",
         limit: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict]:
         """Synchronous issue listing for duplicate detection."""
         url = f"/api/v1/repos/{self.repo_owner}/{self.repo_name}/issues"
         params = {"state": state, "limit": limit}
@@ -218,6 +244,10 @@ class GiteaService:
             response = client.get(url, params=params)
             response.raise_for_status()
             return response.json()
+
+    async def close(self) -> None:
+        """Close HTTP client"""
+        await self.client.aclose()
 
 
 # Global service instance

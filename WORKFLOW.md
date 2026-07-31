@@ -68,7 +68,7 @@ You never invoke these directly during normal phase work — the orchestrator do
   - CI: SonarCloud ✅ | unit + integration 28/28 ✅ (mocked)
   - QA: **partial** — live Set B 0/7; deferred to Phase 4
 - [x] **Phase 4:** Testing (merged [PR #8](https://github.com/IWill29/bug-triage-langgraph/pull/8) → `374c7cf` on `main`)
-  - Tests: **47/47** pass | Set B **7/7 mocked** via `scripts/run_set_b.py`
+  - Tests: **47/47** pass | Set B **8/8 mocked** via `scripts/run_set_b.py`
   - QA: **partial** — live Set B optional (`docker compose up -d` + `python scripts/run_set_b.py --live`)
 
 **All implementation phases (0–4) are complete on `main`.**

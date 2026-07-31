@@ -86,6 +86,7 @@ def create_issue_node(state: BugTriageState) -> dict:
 ---
 
 ### Triage Details
+- **Severity:** {state.get("severity", "medium")}
 - **Confidence:** {state.get("confidence", 0.0):.2f}
 - **Model:** {model_label}
 - **Duplicate Check:** {len(candidates)} similar issues reviewed
@@ -94,7 +95,7 @@ def create_issue_node(state: BugTriageState) -> dict:
     if state.get("stacktrace_hash"):
         body += f"\n<!-- stacktrace_hash:{state['stacktrace_hash']} -->\n"
 
-    labels = [state.get("severity", "medium")] + list(state.get("components") or ["unknown"])
+    labels = list(state.get("components") or ["unknown"])
 
     try:
         issue = gitea_service.create_issue_sync(
@@ -218,7 +219,7 @@ A similar bug report was submitted:
 
 **Duplicate Confidence:** {state.get("duplicate_confidence", 0.0):.2f}
 
-_This issue has been automatically linked and closed as duplicate._
+_This issue has been automatically linked as a duplicate._
 """
 
     issue_id = state["duplicate_issue_id"]

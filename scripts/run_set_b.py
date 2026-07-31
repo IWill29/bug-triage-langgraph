@@ -25,9 +25,10 @@ from src.graph.workflow import build_graph
 from src.utils.logging import setup_logging, logger
 from tests.fixtures.sample_reports import SAMPLE_REPORTS
 
-# QA gate samples: B1 + B3–B8 (7 functional tests per qa-tester agent)
+# QA gate samples: B1–B8 (8 functional tests per qa-tester agent)
 SET_B_QA_SAMPLES = [
     "B1_clean",
+    "B2_api_error",
     "B3_vague",
     "B4_cosmetic_urgent",
     "B5_duplicate",

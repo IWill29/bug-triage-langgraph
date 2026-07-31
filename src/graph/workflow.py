@@ -201,6 +201,13 @@ def build_graph() -> StateGraph:
     graph.add_edge("create_bug", END)
     graph.add_edge("create_feature", END)
     graph.add_edge("comment_duplicate", END)
-    graph.add_edge("human_review", END)
+    graph.add_conditional_edges(
+        "human_review",
+        route_issue_creation,
+        {
+            "create_bug": "create_bug",
+            "create_feature": "create_feature",
+        },
+    )
 
     return graph
