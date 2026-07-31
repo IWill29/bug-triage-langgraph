@@ -12,7 +12,7 @@ Maps each requirement from [`1_candidate_brief.md`](1_candidate_brief.md) to imp
 | 4 | Input via HTTP endpoint **and** CLI | ✅ | `POST /api/triage` in `src/main.py`; `scripts/test_triage.py` (empty/whitespace rejected) |
 | 5 | `docker-compose` with Gitea + dependencies | ✅ | `docker-compose.yml` (Postgres, Gitea, triage-service) |
 | 6 | Seed Set A in Gitea for duplicate testing | ✅ | `scripts/seed_gitea.py` (EXIST-1 … EXIST-4) |
-| 7 | README + short spec explaining choices and LLM steering | ⚠️ | `README.md` + this file; full `spec.md` is long appendix (brief asked for short spec) |
+| 7 | README + short spec explaining choices and LLM steering | ✅ | `README.md` + `BRIEF_COMPLIANCE.md`; `spec.md` opens with appendix note (full detail optional) |
 | 8 | Runnable demo path documented | ✅ | README Quick Start (steps 1–6) |
 
 ## Set B self-test coverage
