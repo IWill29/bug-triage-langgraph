@@ -30,3 +30,16 @@ def test_preprocess_pipeline():
     assert stacktrace is None
     assert stacktrace_hash is None
     assert "  " not in cleaned or cleaned.count("  ") == 0
+
+
+def test_preprocess_extracts_log_style_error():
+    text = """hey checkout fails
+```
+[2025-06-01 09:14:23] ERROR NullReferenceException in OrderService.Calculate() line 214
+```
+sometimes"""
+    cleaned, stacktrace, stacktrace_hash = preprocess_report(text)
+    assert stacktrace is not None
+    assert "NullReferenceException" in stacktrace
+    assert stacktrace_hash is not None
+    assert len(stacktrace_hash) == 64
