@@ -67,9 +67,11 @@ You never invoke these directly during normal phase work — the orchestrator do
 - [x] **Phase 3:** Production hardening (merged [PR #7](https://github.com/IWill29/bug-triage-langgraph/pull/7) → `826c38d` on `main`)
   - CI: SonarCloud ✅ | unit + integration 28/28 ✅ (mocked)
   - QA: **partial** — live Set B 0/7; deferred to Phase 4
-- [ ] **Phase 4:** Testing — **NEXT** (`phase-4-testing`)
+- [ ] **Phase 4:** Testing — **IN PROGRESS** ([PR #8](https://github.com/IWill29/bug-triage-langgraph/pull/8), branch `phase-4-testing`)
+  - Tests: **47/47** pass | Set B **7/7 mocked** via `scripts/run_set_b.py`
+  - QA: **partial** — live Set B blocked (Docker / keys)
 
-Say **`next`** or **`start phase 4`** for full Set B validation + integration test coverage. Optional: start Docker + set `GITEA_TOKEN`/`DB_PASSWORD` for live QA.
+Say **`merge`** when PR #8 CI passes. Optional: `docker compose up -d` + `python scripts/run_set_b.py --live` before merge.
 
 ## Phase Scope (quick reference)
 

@@ -71,6 +71,7 @@ def extract_stacktrace(text: str) -> Optional[str]:
         r'Traceback \(most recent call last\):.*?(?=\n\n|\Z)',
         r'Exception in thread.*?(?=\n\n|\Z)',
         r'Error:.*?at .*?(?=\n\n|\Z)',
+        r'\] ERROR.*?(?=\n\n|\Z)',  # timestamped log lines e.g. [2025-06-01] ERROR ...
         r'\[ERROR\].*?(?=\n\n|\Z)',
     ]
     

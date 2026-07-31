@@ -112,3 +112,18 @@ def test_graph_builds_and_compiles():
     graph = build_graph()
     compiled = graph.compile()
     assert compiled is not None
+
+
+def test_validate_cosmetic_critical_mismatch():
+    """B4 path: critical severity on cosmetic text fails validation."""
+    state = _base_state(
+        title="Footer copyright year incorrect",
+        severity="critical",
+        components=["frontend"],
+        cleaned_report="footer copyright year still says 2024 instead of 2025",
+        retry_count=0,
+    )
+    result = validate_node(state)
+    assert result.get("validation_passed") is False
+    errors = result.get("validation_errors", [{}])[0].get("errors", [])
+    assert "severity_mismatch_cosmetic" in errors
