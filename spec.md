@@ -4,7 +4,7 @@
 **Date:** 2026-07-30  
 **Status:** Implementation complete (candidate exercise scope)
 
-> **Candidate brief:** See [`1_candidate_brief.md`](1_candidate_brief.md) and [`BRIEF_COMPLIANCE.md`](BRIEF_COMPLIANCE.md) for requirement mapping. This document is the full engineering spec (agent-driven build log + design decisions). Evaluators should start with the README quick start and compliance checklist.
+> **Extended design appendix:** This is an extended design appendix; for brief compliance see [`README.md`](README.md) and [`BRIEF_COMPLIANCE.md`](BRIEF_COMPLIANCE.md). Below: full engineering spec (agent-driven build log + design decisions).
 
 ---
 
