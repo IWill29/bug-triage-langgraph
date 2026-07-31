@@ -69,9 +69,6 @@ services:
       - GITEA_URL=http://gitea:3000
       - GITEA_TOKEN=${GITEA_TOKEN:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY:-}
-      - LANGSMITH_PROJECT=${LANGSMITH_PROJECT:-bug-triage-dev}
-      - LANGSMITH_TRACING=${LANGSMITH_TRACING:-true}
     ports:
       - "8000:8000"
     volumes:

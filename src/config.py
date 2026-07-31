@@ -4,7 +4,6 @@ Loads settings from environment variables
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -26,12 +25,6 @@ class Settings(BaseSettings):
     
     # OpenAI
     openai_api_key: str
-    
-    # LangSmith (optional)
-    langsmith_api_key: Optional[str] = None
-    langsmith_project: str = "bug-triage-dev"
-    langsmith_tracing: bool = True
-    langsmith_sampling_rate: float = 0.1
 
     # Application
     environment: str = "development"

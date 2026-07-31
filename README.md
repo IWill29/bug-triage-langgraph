@@ -150,7 +150,6 @@ docker-compose.yml
 | `GITEA_REPO_OWNER` | No | Default `triagebot` |
 | `GITEA_REPO_NAME` | No | Default `bug-reports` |
 | `DATABASE_URL` | Yes | Postgres for LangGraph checkpoint |
-| `LANGSMITH_*` | No | Optional tracing |
 
 ## Troubleshooting
 

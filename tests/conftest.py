@@ -12,7 +12,6 @@ os.environ.setdefault("DATABASE_URL", "postgresql://test:test@localhost:5432/tes
 os.environ.setdefault("GITEA_URL", "http://localhost:3000")
 os.environ.setdefault("GITEA_TOKEN", "test-token")
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-key")
-os.environ.setdefault("LANGSMITH_TRACING", "false")
 
 from src.graph.workflow import build_graph
 

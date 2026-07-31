@@ -10,7 +10,6 @@ from fastapi import FastAPI, HTTPException
 
 from src.config import settings
 from src.utils.logging import setup_logging, logger
-from src.utils.observability import configure_langsmith
 from src.middleware.rate_limit import RateLimitMiddleware
 from src.models.api import TriageRequest, TriageResponse
 from src.graph.workflow import build_graph
@@ -19,7 +18,6 @@ from src.graph.state import create_initial_state
 
 
 setup_logging()
-configure_langsmith(settings)
 
 _compiled_graph = None
 _checkpointer = None
