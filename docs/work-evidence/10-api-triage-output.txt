@@ -1,0 +1,20 @@
+﻿{
+    "status":  "created",
+    "thread_id":  "d3a6f331-56c7-45b2-9b1d-4a9651bf5ce5",
+    "issue_url":  "http://localhost:3000/triagebot/bug-reports/issues/18",
+    "title":  "Profile picture upload hangs for large files",
+    "severity":  "high",
+    "components":  [
+                       "frontend",
+                       "backend",
+                       "api"
+                   ],
+    "confidence":  0.9,
+    "is_duplicate":  false,
+    "duplicate_issue_id":  null,
+    "needs_human_review":  false,
+    "warnings":  [
+
+                 ],
+    "reproduction_steps":  "1. Upload a profile picture larger than 5MB (e.g., 8MB PNG or 12MB JPEG). 2. Observe the spinner that appears indefinitely without saving the picture."
+}

@@ -1,0 +1,6 @@
+$ docker compose ps
+
+NAME                IMAGE                     SERVICE          STATUS                       PORTS
+langpath-gitea      gitea/gitea:1.21          gitea            Up 2 hours (healthy)         0.0.0.0:3000->3000/tcp
+langpath-postgres   postgres:14               postgres         Up About an hour (healthy)   0.0.0.0:5432->5432/tcp
+langpath-triage     langpath-triage-service   triage-service   Up About an hour (healthy)   0.0.0.0:8000->8000/tcp

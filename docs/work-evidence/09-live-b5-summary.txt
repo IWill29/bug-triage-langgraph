@@ -1,0 +1,10 @@
+$ python scripts/run_set_b.py --live --sample B5_duplicate
+
+Set B Validation — mode: live
+------------------------------------------------------------
+B5_duplicate: PASS
+  → duplicate_issue_id: 1 (EXIST-1)
+  → comment posted to Gitea issue #1
+  → confidence: 0.9
+------------------------------------------------------------
+Score: 1/1

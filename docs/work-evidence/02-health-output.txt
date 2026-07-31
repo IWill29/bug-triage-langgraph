@@ -1,0 +1,5 @@
+﻿{
+    "status":  "healthy",
+    "service":  "bug-triage",
+    "version":  "1.0.0"
+}

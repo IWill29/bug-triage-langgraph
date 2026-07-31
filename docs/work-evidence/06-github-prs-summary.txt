@@ -1,0 +1,12 @@
+$ gh pr list --repo IWill29/bug-triage-langgraph --state merged --limit 10
+
+11  docs: mark Gitea PR ground rule complete          docs/gitea-pr-brief-compliance  MERGED  2026-07-31
+10  fix: stabilize Set B3 live runs with sticky human review  fix/b3-human-review-sticky  MERGED  2026-07-31
+9   Fix brief compliance gaps in triage workflow and Gitea    fix/brief-compliance-gaps   MERGED  2026-07-31
+8   Phase 4: Testing and Set B validation                       phase-4-testing             MERGED  2026-07-31
+7   Phase 3: Production hardening                               phase-3-production-hardening MERGED 2026-07-31
+6   Phase 2: Core workflow nodes                                phase-2-workflow-nodes      MERGED  2026-07-30
+5   Add pr-checker agent for automatic PR CI verification       chore/pr-checker-agent      MERGED  2026-07-30
+4   chore: replace Codacy with SonarQube                        chore/sonarqube-setup       MERGED  2026-07-30
+3   Add automatic phase orchestrator workflow                   chore/auto-orchestration-workflow MERGED 2026-07-30
+2   Phase 1: Infrastructure (Docker + project scaffold)       phase-1-infrastructure      MERGED  2026-07-30
