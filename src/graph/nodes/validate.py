@@ -104,7 +104,7 @@ def validate_node(state: BugTriageState) -> dict:
         "node_timings": [{"node": "validate", "duration_ms": duration_ms}],
     }
 
-    if state.get("confidence", 0.0) < settings.confidence_threshold:
+    if state.get("confidence", 0.0) <= settings.confidence_threshold:
         result["needs_human_review"] = True
         result["processing_warnings"] = [
             f"Low confidence ({state.get('confidence', 0.0):.2f}) - flagged for human review"

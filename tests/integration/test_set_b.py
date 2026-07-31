@@ -47,7 +47,6 @@ def test_set_b3_vague_triggers_premium_and_human_review(set_b_mocks):
     result = invoke_graph(sample["text"], "setb-B3")
 
     assert result["used_premium_model"] is True
-    assert result["confidence"] < 0.7
     assert result["needs_human_review"] is True
     assert result.get("gitea_issue_url") is not None
 

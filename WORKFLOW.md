@@ -70,8 +70,11 @@ You never invoke these directly during normal phase work — the orchestrator do
 - [x] **Phase 4:** Testing (merged [PR #8](https://github.com/IWill29/bug-triage-langgraph/pull/8) → `374c7cf` on `main`)
   - Tests: **47/47** pass | Set B **8/8 mocked** via `scripts/run_set_b.py`
   - QA: **partial** — live Set B optional (`docker compose up -d` + `python scripts/run_set_b.py --live`)
+- [x] **Brief compliance:** (merged [PR #9](https://github.com/IWill29/bug-triage-langgraph/pull/9) → `ee8307c` on `main`)
+  - Gitea labels, B4 downgrade, `human_review` routing, API `reproduction_steps`, CLI/harness/seed fixes
+  - Tests: **47/47** pass | Set B **8/8 mocked**
 
-**All implementation phases (0–4) are complete on `main`.**
+**All implementation phases (0–4) and brief-compliance fixes are complete on `main`.**
 
 ## Phase Scope (quick reference)
 

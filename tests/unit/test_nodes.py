@@ -7,7 +7,8 @@ import pytest
 from src.graph.state import BugTriageState, create_initial_state
 from src.graph.nodes.preprocess import preprocess_node
 from src.graph.nodes.risk_check import risk_check_node
-from src.graph.nodes.triage import route_confidence
+from src.graph.nodes.triage import _extraction_to_state, route_confidence
+from src.models.triage import TriageExtraction
 from src.graph.nodes.validate import validate_node
 from src.graph.workflow import build_graph, route_risk_level, route_duplicate
 
@@ -58,6 +59,46 @@ def test_risk_check_safe_path():
 def test_confidence_gate_triggers_retry():
     state = _base_state(confidence=0.5, retry_count=1)
     assert route_confidence(state) == "premium_retry"
+
+
+def test_confidence_boundary_triggers_retry():
+    """Confidence exactly at threshold (0.70) routes to premium retry."""
+    state = _base_state(confidence=0.70, retry_count=0)
+    assert route_confidence(state) == "premium_retry"
+
+
+def test_extraction_preserves_human_review_on_premium_retry():
+    """Premium retry must not clear needs_human_review when confidence rises."""
+    extraction = TriageExtraction(
+        title="Reports feature malfunctioning",
+        severity="medium",
+        components=["unknown"],
+        reproduction_steps=None,
+        confidence=0.85,
+        reasoning="Retry improved title but report remains vague.",
+    )
+    delta = _extraction_to_state(
+        extraction,
+        "gpt-4o",
+        sticky_human_review=True,
+    )
+    assert delta["needs_human_review"] is True
+    assert delta["confidence"] == 0.85
+
+
+def test_validate_flags_human_review_at_confidence_boundary():
+    """Confidence at threshold sets needs_human_review after validation."""
+    state = _base_state(
+        title="Reports feature malfunctioning",
+        severity="medium",
+        components=["unknown"],
+        cleaned_report="the reports thing is broken again pls fix",
+        confidence=0.70,
+        retry_count=1,
+    )
+    result = validate_node(state)
+    assert result.get("validation_passed") is True
+    assert result.get("needs_human_review") is True
 
 
 def test_confidence_gate_validates_high_confidence():

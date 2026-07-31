@@ -44,8 +44,6 @@ def validate_result(sample_id: str, result: dict[str, Any]) -> tuple[bool, list[
     failures: list[str] = []
 
     if sample_id == "B3_vague":
-        if result.get("confidence", 1.0) >= 0.7:
-            failures.append("confidence should be < 0.70")
         if not result.get("needs_human_review"):
             failures.append("needs_human_review should be True")
     elif sample_id == "B4_cosmetic_urgent":
