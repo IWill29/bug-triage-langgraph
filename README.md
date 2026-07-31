@@ -115,7 +115,7 @@ Preprocess → Risk check → Triage (LLM) → Validate → Duplicate check → 
 
 ## Tests
 
-Mocked Set B (7/7) — no live keys required:
+Mocked Set B (8/8) — no live keys required:
 
 ```bash
 pytest tests/ -q

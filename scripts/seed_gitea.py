@@ -103,18 +103,24 @@ async def seed_gitea():
     try:
         # Check if issues already exist
         existing_issues = await gitea.list_issues(state="all")
-        
-        if len(existing_issues) >= len(SET_A_ISSUES):
+        existing_titles = {issue.get("title") for issue in existing_issues}
+        missing_issues = [
+            issue_data
+            for issue_data in SET_A_ISSUES
+            if issue_data["title"] not in existing_titles
+        ]
+
+        if not missing_issues:
             logger.info(
                 "seed_gitea_skip",
-                reason="Issues already exist",
-                count=len(existing_issues)
+                reason="All Set A issues already present",
+                count=len(existing_issues),
             )
             return
-        
-        # Create issues
+
+        # Create missing issues only
         created_count = 0
-        for issue_data in SET_A_ISSUES:
+        for issue_data in missing_issues:
             logger.info(
                 "creating_issue",
                 id=issue_data["id"],

@@ -39,7 +39,20 @@ def validate_node(state: BugTriageState) -> dict:
     severity = state.get("severity")
 
     if severity == "critical" and any(kw in text for kw in COSMETIC_KEYWORDS):
-        errors.append("severity_mismatch_cosmetic")
+        logger.info(
+            "validate_cosmetic_downgrade",
+            thread_id=state.get("thread_id"),
+            from_severity=severity,
+        )
+        duration_ms = (datetime.now() - start).total_seconds() * 1000
+        return {
+            "severity": "low",
+            "validation_passed": True,
+            "processing_warnings": [
+                "Severity downgraded to low (cosmetic keywords in report)"
+            ],
+            "node_timings": [{"node": "validate", "duration_ms": duration_ms}],
+        }
 
     if severity == "low" and any(kw in text for kw in SECURITY_KEYWORDS):
         errors.append("severity_mismatch_security")
@@ -48,6 +61,11 @@ def validate_node(state: BugTriageState) -> dict:
     duration_ms = (datetime.now() - start).total_seconds() * 1000
 
     if errors and retry_count >= 2:
+        fallback_severity = (
+            "low"
+            if "severity_mismatch_cosmetic" in errors
+            else "medium"
+        )
         logger.warning(
             "validate_fallback_defaults",
             thread_id=state.get("thread_id"),
@@ -55,7 +73,7 @@ def validate_node(state: BugTriageState) -> dict:
             retry_count=retry_count,
         )
         return {
-            "severity": "medium",
+            "severity": fallback_severity,
             "components": components or ["unknown"],
             "needs_human_review": True,
             "validation_passed": True,

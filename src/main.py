@@ -86,6 +86,7 @@ def _build_response(result: dict, thread_id: str) -> TriageResponse:
         duplicate_issue_id=result.get("duplicate_issue_id"),
         needs_human_review=result.get("needs_human_review", False),
         warnings=list(result.get("processing_warnings") or []),
+        reproduction_steps=result.get("reproduction_steps"),
     )
 
 

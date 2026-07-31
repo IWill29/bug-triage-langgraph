@@ -87,7 +87,7 @@ def test_validate_fallback_after_max_retries():
         title="short",
         severity="critical",
         components=[],
-        cleaned_report="typo in footer copyright year",
+        cleaned_report="api endpoint returns 500 when uploading large files",
         retry_count=2,
     )
     result = validate_node(state)
@@ -115,7 +115,7 @@ def test_graph_builds_and_compiles():
 
 
 def test_validate_cosmetic_critical_mismatch():
-    """B4 path: critical severity on cosmetic text fails validation."""
+    """B4 path: critical severity on cosmetic text downgrades to low."""
     state = _base_state(
         title="Footer copyright year incorrect",
         severity="critical",
@@ -124,6 +124,5 @@ def test_validate_cosmetic_critical_mismatch():
         retry_count=0,
     )
     result = validate_node(state)
-    assert result.get("validation_passed") is False
-    errors = result.get("validation_errors", [{}])[0].get("errors", [])
-    assert "severity_mismatch_cosmetic" in errors
+    assert result.get("validation_passed") is True
+    assert result.get("severity") == "low"

@@ -53,3 +53,7 @@ class TriageResponse(BaseModel):
     
     needs_human_review: bool
     warnings: List[str] = Field(default_factory=list)
+    reproduction_steps: Optional[str] = Field(
+        default=None,
+        description="Extracted reproduction steps, or null if none provided",
+    )

@@ -47,6 +47,10 @@ def test_off_topic_routed_to_human_review(mocker):
         "src.graph.workflow.fast_triage_node",
         side_effect=AssertionError("LLM should not run for off-topic input"),
     )
+    mocker.patch(
+        "src.graph.nodes.gitea.gitea_service.create_issue_sync",
+        return_value={"number": 99, "html_url": "http://gitea/issues/99"},
+    )
     graph = build_graph().compile(checkpointer=MemorySaver())
     report = "Recipe: preheat oven to 350F. Mix ingredients and bake."
     result = _invoke(graph, report, "off-topic-test")
@@ -54,12 +58,17 @@ def test_off_topic_routed_to_human_review(mocker):
     assert result["input_rejected"] is True
     assert result["input_quality"] == "off_topic"
     assert result["needs_human_review"] is True
+    assert result.get("gitea_issue_url")
 
 
 def test_too_short_routed_to_human_review(mocker):
     mocker.patch(
         "src.graph.workflow.fast_triage_node",
         side_effect=AssertionError("LLM should not run for too-short input"),
+    )
+    mocker.patch(
+        "src.graph.nodes.gitea.gitea_service.create_issue_sync",
+        return_value={"number": 100, "html_url": "http://gitea/issues/100"},
     )
     graph = build_graph().compile(checkpointer=MemorySaver())
     result = _invoke(graph, "too short", "too-short-test")
