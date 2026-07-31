@@ -2,7 +2,9 @@
 
 **Version:** 1.0  
 **Date:** 2026-07-30  
-**Status:** Architecture Validated, Ready for Implementation
+**Status:** Implementation complete (candidate exercise scope)
+
+> **Candidate brief:** See [`1_candidate_brief.md`](1_candidate_brief.md) and [`BRIEF_COMPLIANCE.md`](BRIEF_COMPLIANCE.md) for requirement mapping. This document is the full engineering spec (agent-driven build log + design decisions). Evaluators should start with the README quick start and compliance checklist.
 
 ---
 

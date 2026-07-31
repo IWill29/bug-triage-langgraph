@@ -35,6 +35,5 @@ pytest-cov>=5.0.0
 # OpenAI SDK
 openai>=1.50.0
 
-# Vector extension (pgvector Python client)
-pgvector>=0.3.0
+# Embeddings (in-memory cosine similarity)
 numpy>=1.26.0
