@@ -41,8 +41,12 @@ def get_duplicate_candidates(
     report: str,
     threshold: float | None = None,
 ) -> list[dict[str, Any]]:
-    """Retrieve top-K similar issues via embedding similarity."""
-    threshold = threshold or settings.embedding_threshold
+    """Retrieve top-K similar issues via embedding similarity.
+
+    Uses top-K recall (not hard threshold) so LLM verification can catch
+    paraphrased duplicates that score below the embedding cutoff (e.g. B5 vs EXIST-1).
+    """
+    recall_floor = threshold or settings.embedding_threshold
 
     try:
         issues = gitea_service.list_issues_sync(state="open", limit=100)
@@ -62,16 +66,28 @@ def get_duplicate_candidates(
             continue
         issue_embedding = embedding_service.generate_embedding(text)
         score = embedding_service.cosine_similarity(query_embedding, issue_embedding)
-        if score >= threshold:
-            candidates.append({
-                "id": issue["number"],
-                "title": issue.get("title", ""),
-                "description": issue.get("body", ""),
-                "score": score,
-            })
+        candidates.append({
+            "id": issue["number"],
+            "title": issue.get("title", ""),
+            "description": issue.get("body", ""),
+            "score": score,
+        })
 
     candidates.sort(key=lambda item: item["score"], reverse=True)
-    return candidates[:5]
+    top_k = candidates[:5]
+
+    if not top_k:
+        return []
+
+    if top_k[0]["score"] < recall_floor:
+        logger.info(
+            "duplicate_candidates_below_recall_floor",
+            top_score=top_k[0]["score"],
+            recall_floor=recall_floor,
+            returning=len(top_k),
+        )
+
+    return top_k
 
 
 def duplicate_check_node(state: BugTriageState) -> dict:
@@ -107,6 +123,8 @@ def duplicate_check_node(state: BugTriageState) -> dict:
             "node_timings": [{"node": "duplicate_check", "duration_ms": duration_ms}],
         }
 
+    confirmed: list[tuple[int, float, dict]] = []
+
     for candidate in candidates[:3]:
         prompt = f"""Are these bug reports duplicates?
 
@@ -141,19 +159,23 @@ Return:
             continue
 
         if result.is_duplicate and result.confidence > settings.duplicate_confidence_threshold:
-            duration_ms = (datetime.now() - start).total_seconds() * 1000
-            return {
-                "is_duplicate": True,
-                "duplicate_issue_id": candidate["id"],
-                "duplicate_confidence": result.confidence,
-                "duplicate_candidates": candidates,
-                "classification_history": [{
-                    "action": "duplicate_detected",
-                    "confidence": result.confidence,
-                    "reasoning": result.reasoning,
-                }],
-                "node_timings": [{"node": "duplicate_check", "duration_ms": duration_ms}],
-            }
+            confirmed.append((candidate["id"], result.confidence, candidate))
+
+    if confirmed:
+        duplicate_id, dup_confidence, _ = min(confirmed, key=lambda item: item[0])
+        duration_ms = (datetime.now() - start).total_seconds() * 1000
+        return {
+            "is_duplicate": True,
+            "duplicate_issue_id": duplicate_id,
+            "duplicate_confidence": dup_confidence,
+            "duplicate_candidates": candidates,
+            "classification_history": [{
+                "action": "duplicate_detected",
+                "confidence": dup_confidence,
+                "reasoning": f"Linked to earliest matching open issue #{duplicate_id}",
+            }],
+            "node_timings": [{"node": "duplicate_check", "duration_ms": duration_ms}],
+        }
 
     max_score = max(c.get("score", 0.0) for c in candidates)
     duration_ms = (datetime.now() - start).total_seconds() * 1000

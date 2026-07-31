@@ -999,6 +999,8 @@ _This issue has been automatically linked and closed as duplicate._
 
 **Solution:** Embeddings for recall, LLM for precision
 
+> **Implementation note:** Current code uses OpenAI embeddings + in-memory cosine similarity against open Gitea issues (`src/graph/nodes/duplicate.py`). No pgvector tables in `scripts/init.sql` — brief-scope delivery. SQL below is an optional production upgrade path, not current runtime behavior.
+
 ### Stage 1: Embedding Retrieval
 
 **Model:** `text-embedding-3-large` (3072 dimensions)  
@@ -1796,11 +1798,11 @@ duplicate_detections = Counter(
 ## Development Roadmap
 
 ### Phase 1: Infrastructure Setup (Day 1)
-- [ ] Docker Compose with Gitea + Postgres
-- [ ] PostgreSQL with pgvector extension
-- [ ] Gitea initialization script
-- [ ] Seed Set A issues into Gitea
-- [ ] Environment configuration (.env template)
+- [x] Docker Compose with Gitea + Postgres
+- [x] PostgreSQL (pgvector deferred — duplicates use in-memory embeddings)
+- [x] Gitea initialization script
+- [x] Seed Set A issues into Gitea
+- [x] Environment configuration (.env template)
 
 ### Phase 2: Core Workflow (Days 2-3)
 - [ ] State schema (Pydantic TypedDict)
@@ -1812,9 +1814,9 @@ duplicate_detections = Counter(
 - [ ] Validation node (schema + business rules)
 
 ### Phase 3: Duplicate Detection (Day 4)
-- [ ] Embedding service (OpenAI)
-- [ ] Vector storage setup (pgvector)
-- [ ] Stage 1: Embedding similarity search
+- [x] Embedding service (OpenAI)
+- [x] Similarity search (in-memory + Gitea list; pgvector optional later)
+- [x] Stage 1: Embedding similarity search
 - [ ] Stage 2: LLM comparison
 - [ ] Threshold tuning on Set B
 
